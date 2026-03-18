@@ -91,3 +91,9 @@ tr:nth-child(even) {
 #projects a:hover {
   color: #e74c3c;
 }
+footer {
+  text-align: center;
+  background-color: #34495e;
+  color: white;
+  padding: 10px;
+}
