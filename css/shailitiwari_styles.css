@@ -13,3 +13,18 @@ body {
   background-color: #f5f7fa;
   color: #2c3e50;
 }
+/* Header needed a strong background to stand out */
+
+header {
+  text-align: center;
+  background-color: #34495e;
+  color: white;
+  padding: 20px;
+}
+
+/* profile image adjustment */
+
+header img {
+  border-radius: 50%;
+  margin-top: 10px;
+}
