@@ -1,7 +1,6 @@
 /* 
-  Reset — keeps things predictable across browsers
+  Reset - standard browser reset
 */
-
 * {
   margin: 0;
   padding: 0;
@@ -9,41 +8,39 @@
 }
 
 /* 
-  Slight warm background so white sections don’t feel too harsh
+  Body - maroon gradient background
 */
-
 body {
   font-family: Arial, Helvetica, sans-serif;
-  background-color: #f8f4f4;
+  background: linear-gradient(135deg, #f8f1f4 0%, #e8d5dc 100%);
   color: #2c2c2c;
   line-height: 1.6;
 }
 
 /* 
-  Header — deep maroon gradient gives a premium feel
+  Header - maroon gradient theme
 */
-
 header {
   text-align: center;
-  background: linear-gradient(135deg, #6e0f1f, #3d0812);
+  background: linear-gradient(135deg, #6e0f1f 0%, #8b0000 100%);
   color: #ffffff;
-  padding: 40px 20px 25px;
+  padding: 50px 20px 30px;
+  box-shadow: 0 8px 25px rgba(110,15,31,0.3);
 }
 
 /* 
-  Profile image — clean and properly highlighted
+  Profile image - gold border with maroon theme
 */
-
 header img {
   display: block;
-  margin: 20px auto 10px;
-  width: 130px;
-  height: 130px;
+  margin: 20px auto;
+  width: 140px;
+  height: 140px;
   object-fit: cover;
   border-radius: 50%;
-  border: 5px solid #ffffff;
-  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
-  transition: transform 0.25s ease;
+  border: 5px solid rgba(255,255,255,0.9);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+  transition: transform 0.3s ease;
 }
 
 header img:hover {
@@ -51,142 +48,216 @@ header img:hover {
 }
 
 /* 
-  Navigation — darker maroon with proper spacing
+  Navigation - white nav with maroon hover
 */
-
 nav ul {
   display: flex;
   justify-content: center;
   list-style: none;
-  background-color: #4a0d18;
-  padding: 12px 0;
+  background: rgba(255,255,255,0.95);
+  padding: 15px 0;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.1);
 }
 
 nav ul li {
-  margin: 0 15px;
+  margin: 0 12px;
 }
 
 nav ul li a {
   text-decoration: none;
-  color: #f8eaea;
-  font-size: 15px;
-  padding: 6px 12px;
+  color: #6e0f1f;
+  font-weight: 600;
+  padding: 10px 20px;
+  border-radius: 20px;
   transition: all 0.3s ease;
 }
 
-/* 
-  Using gold accent for hover so links don’t blend in
-*/
-
 nav ul li a:hover {
-  background-color: #c89b3c;
-  color: #2c2c2c;
-  border-radius: 5px;
+  background: linear-gradient(135deg, #6e0f1f, #8b0000);
+  color: white;
 }
 
 /* 
-  Sections — card layout with warm tones
+  Sections - white cards with maroon accents
 */
-
 section {
-  margin: 25px auto;
-  padding: 20px;
+  margin: 30px auto;
+  padding: 30px;
   width: 85%;
-  background: #ffffff;
-  border-radius: 10px;
-  border: 1px solid #eadcdc;
-  box-shadow: 0 4px 12px rgba(110, 15, 31, 0.08);
+  max-width: 900px;
+  background: white;
+  border-radius: 15px;
+  box-shadow: 0 8px 25px rgba(110,15,31,0.1);
+  transition: transform 0.3s ease;
 }
 
-/* Skills readability */
-
-#skills ul {
-  line-height: 1.8;
+section:hover {
+  transform: translateY(-3px);
 }
 
-#skills li {
-  font-weight: 500;
+section h2 {
+  color: #6e0f1f;
+  font-size: 2em;
+  text-align: center;
+  margin-bottom: 25px;
 }
 
 /* 
-  Table — maroon header + soft rows
+  Skills - maroon accent border
 */
+#skills ul > li {
+  margin: 20px 0;
+  padding: 15px;
+  background: #fdf8f9;
+  border-left: 4px solid #6e0f1f;
+  border-radius: 8px;
+}
 
+#skills ul ul {
+  margin-top: 10px;
+  padding-left: 20px;
+}
+
+/* 
+  Table - maroon header theme
+*/
 table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 10px;
-}
-
-th, td {
-  border: 1px solid #e5d6d6;
-  padding: 12px;
+  margin-top: 15px;
+  border-radius: 10px;
+  overflow: hidden;
 }
 
 th {
-  background-color: #6e0f1f;
+  background: linear-gradient(135deg, #6e0f1f, #8b0000);
   color: white;
-  text-align: center;
+  padding: 15px;
+  text-align: left;
 }
 
-tr:nth-child(even) {
-  background-color: #f9eeee;
+td {
+  padding: 15px;
+  background: #fdf8f9;
+  border-bottom: 1px solid #f0e8ec;
+}
+
+tr:hover td {
+  background: #f8f1f4;
 }
 
 /* 
-  Projects — IMPORTANT (link visibility fix)
+  Projects - maroon accent cards
 */
-
 #projects li {
-  margin-bottom: 18px;
+  margin-bottom: 20px;
+  padding: 20px;
+  background: #fdf8f9;
+  border-radius: 10px;
+  border-left: 4px solid #6e0f1f;
 }
 
-/* bright enough to stand out */
+#projects h3 {
+  color: #6e0f1f;
+  margin-bottom: 10px;
+}
 
 #projects a {
-  text-decoration: none;
   color: #8b0000;
   font-weight: 600;
-  transition: color 0.3s ease;
+  text-decoration: none;
 }
-
-/* hover becomes gold (visible + premium) */
 
 #projects a:hover {
   color: #c89b3c;
 }
 
 /* 
-  Footer — same theme consistency
+  Form - maroon theme styling
 */
+form {
+  max-width: 600px;
+  margin: 0 auto;
+}
 
-footer {
-  text-align: center;
-  background-color: #4a0d18;
-  color: #f8eaea;
-  padding: 15px;
-  font-size: 14px;
-  margin-top: 20px;
+label {
+  display: block;
+  margin: 15px 0 5px;
+  color: #6e0f1f;
+  font-weight: 600;
+}
+
+input[type="text"],
+input[type="email"],
+textarea,
+select {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid #f0e8ec;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  background: #fdf8f9;
+}
+
+input[type="text"]:focus,
+input[type="email"]:focus,
+textarea:focus,
+select:focus {
+  border-color: #6e0f1f;
+  outline: none;
+}
+
+input[type="submit"] {
+  background: linear-gradient(135deg, #6e0f1f, #8b0000);
+  color: white;
+  border: none;
+  padding: 12px 30px;
+  border-radius: 25px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+input[type="radio"] {
+  margin-right: 8px;
 }
 
 /* 
-  Responsive — basic adjustments
+  Footer - matches header theme
 */
+footer {
+  text-align: center;
+  background: white;
+  color: #6e0f1f;
+  padding: 25px;
+  box-shadow: 0 -3px 10px rgba(110,15,31,0.1);
+  margin-top: 30px;
+}
 
+footer a {
+  color: #8b0000;
+  text-decoration: none;
+}
+
+footer a:hover {
+  color: #c89b3c;
+}
+
+/* 
+  Responsive design
+*/
 @media (max-width: 600px) {
-
   nav ul {
     flex-direction: column;
     align-items: center;
   }
-
+  
   section {
     width: 95%;
-    padding: 15px;
+    padding: 20px;
   }
-
+  
   header img {
-    width: 100px;
-    height: 100px;
+    width: 110px;
+    height: 110px;
   }
 }
