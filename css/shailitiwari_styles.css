@@ -1,0 +1,15 @@
+/* I reset spacing first because browsers add their own default margin */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Keeping things simple and readable */
+
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f5f7fa;
+  color: #2c3e50;
+}
