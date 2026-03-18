@@ -97,3 +97,13 @@ footer {
   color: white;
   padding: 10px;
 }
+/* tried to make it usable on smaller screens */
+
+@media (max-width: 600px) {
+
+  nav ul {
+    flex-direction: column;
+    align-items: center;
+  }
+
+}
