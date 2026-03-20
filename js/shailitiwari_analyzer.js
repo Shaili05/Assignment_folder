@@ -24,3 +24,21 @@ const students = [
     attendance: 91
   }
 ];
+
+// calculating total marks for each student
+
+function getTotalMarks(student) {
+  let total = 0;
+
+  for (let i = 0; i < student.marks.length; i++) {
+    total += student.marks[i].score;
+  }
+
+  return total;
+}
+
+// printing totals
+
+students.forEach(stu => {
+  console.log(stu.name + " Total Marks: " + getTotalMarks(stu));
+});
