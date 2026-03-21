@@ -37,3 +37,4 @@ Additional fail conditions:
 - If any subject ≤ 40  
 - If attendance < 75  
 
+![output](screenshots/output.png)
