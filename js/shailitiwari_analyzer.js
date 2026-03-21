@@ -74,3 +74,29 @@ function getHighestBySubject() {
 }
 
 getHighestBySubject();
+
+// calculating average score for each subject
+
+function getSubjectAverage() {
+  let totalMap = {};
+  let countMap = {};
+
+  students.forEach(stu => {
+    stu.marks.forEach(m => {
+      if (!totalMap[m.subject]) {
+        totalMap[m.subject] = 0;
+        countMap[m.subject] = 0;
+      }
+
+      totalMap[m.subject] += m.score;
+      countMap[m.subject]++;
+    });
+  });
+
+  for (let subject in totalMap) {
+    let avg = totalMap[subject] / countMap[subject];
+    console.log(`Average ${subject} Score: ${avg}`);
+  }
+}
+
+getSubjectAverage();
