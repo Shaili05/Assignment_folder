@@ -100,3 +100,22 @@ function getSubjectAverage() {
 }
 
 getSubjectAverage();
+// finding class topper based on total marks
+
+function getTopper() {
+  let topStudent = "";
+  let maxMarks = 0;
+
+  students.forEach(stu => {
+    let total = getTotalMarks(stu);
+
+    if (total > maxMarks) {
+      maxMarks = total;
+      topStudent = stu.name;
+    }
+  });
+
+  console.log(`Class Topper: ${topStudent} with ${maxMarks} marks`);
+}
+
+getTopper();
