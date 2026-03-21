@@ -119,3 +119,30 @@ function getTopper() {
 }
 
 getTopper();
+// assigning grades with fail conditions
+
+function getGrade(student) {
+  let avg = getAverage(student);
+
+  // checking attendance first
+  if (student.attendance < 75) {
+    return "Fail (Low Attendance)";
+  }
+
+  // checking subject failure
+  for (let m of student.marks) {
+    if (m.score <= 40) {
+      return `Fail (Failed in ${m.subject})`;
+    }
+  }
+
+  if (avg >= 85) return "A";
+  if (avg >= 70) return "B";
+  if (avg >= 50) return "C";
+
+  return "Fail";
+}
+
+students.forEach(stu => {
+  console.log(stu.name + " Grade: " + getGrade(stu));
+});
