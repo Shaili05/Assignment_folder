@@ -26,17 +26,16 @@ const students = [
 ];
 
 // calculating total marks for each student
-
 function getTotalMarks(student) {
   let total = 0;
 
+  // using loop to add all subject scores
   for (let i = 0; i < student.marks.length; i++) {
     total += student.marks[i].score;
   }
 
   return total;
 }
-
 // printing totals
 
 students.forEach(stu => {
@@ -52,3 +51,4 @@ function getAverage(student) {
 students.forEach(stu => {
   console.log(stu.name + " Average: " + getAverage(stu));
 });
+
