@@ -52,3 +52,25 @@ students.forEach(stu => {
   console.log(stu.name + " Average: " + getAverage(stu));
 });
 
+// finding highest score in each subject
+
+function getHighestBySubject() {
+  let highestMap = {};
+
+  students.forEach(stu => {
+    stu.marks.forEach(m => {
+      if (!highestMap[m.subject] || m.score > highestMap[m.subject].score) {
+        highestMap[m.subject] = {
+          name: stu.name,
+          score: m.score
+        };
+      }
+    });
+  });
+
+  for (let subject in highestMap) {
+    console.log(`Highest in ${subject}: ${highestMap[subject].name} (${highestMap[subject].score})`);
+  }
+}
+
+getHighestBySubject();
