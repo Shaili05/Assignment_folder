@@ -146,3 +146,14 @@ function getGrade(student) {
 students.forEach(stu => {
   console.log(stu.name + " Grade: " + getGrade(stu));
 });
+// final structured output for better readability
+
+console.log("\n--- FINAL REPORT ---\n");
+
+students.forEach(stu => {
+  console.log(`Name: ${stu.name}`);
+  console.log(`Total Marks: ${getTotalMarks(stu)}`);
+  console.log(`Average: ${getAverage(stu)}`);
+  console.log(`Grade: ${getGrade(stu)}`);
+  console.log("----------------------------");
+});
