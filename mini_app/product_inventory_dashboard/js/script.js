@@ -1,7 +1,6 @@
 // ============================================
 // script.js - Product Inventory Dashboard
-// Written by: [Your Name]
-// ============================================
+// ==========================================
 
 
 // ---- DEFAULT PRODUCTS ----
@@ -26,8 +25,7 @@ const ITEMS_PER_PAGE = 6;  // how many cards per page
 
 
 // ============================================
-// SIMULATED API FETCH (Promise + setTimeout)
-// mimics how a real backend call would work
+// SIMULATED API FETCH 
 // ============================================
 function fetchProducts() {
     return new Promise(function(resolve) {
@@ -77,7 +75,6 @@ function updateAnalytics() {
 
 // ============================================
 // FILTERING + SORTING LOGIC
-// called every time a filter/search changes
 // ============================================
 function applyFiltersAndSort() {
     const searchVal = document.getElementById("searchInput").value.toLowerCase().trim();
