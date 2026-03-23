@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Inventory Dashboard</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <!-- ====== HEADER ====== -->
+    <header class="main-header">
+        <div class="header-inner">
+            <span class="header-icon">📦</span>
+            <div>
+                <h1>Product Inventory Dashboard</h1>
+                <p class="header-sub">Manage your store inventory in one place</p>
+                <button id="darkModeToggle" class="dark-toggle">🌙</button>
+                
+            </div>
+        </div>
+    </header>
+
+    <!-- ====== CONTROLS SECTION ====== -->
+    <section class="controls-section">
+        <div class="controls-inner">
+
+            <div class="control-group">
+                <label for="searchInput">Search Product</label>
+                <input type="text" id="searchInput" placeholder="e.g. Laptop, T-Shirt..." />
+            </div>
+
+            <div class="control-group">
+                <label for="categoryFilter">Category</label>
+                <select id="categoryFilter">
+                    <option value="all">All Categories</option>
+                    <option value="electronics">Electronics</option>
+                    <option value="clothing">Clothing</option>
+                    <option value="books">Books</option>
+                    <option value="accessories">Accessories</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label for="sortFilter">Sort By</label>
+                <select id="sortFilter">
+                    <option value="default">Default</option>
+                    <option value="price-asc">Price: Low to High</option>
+                    <option value="price-desc">Price: High to Low</option>
+                    <option value="name-asc">Name: A to Z</option>
+                    <option value="name-desc">Name: Z to A</option>
+                </select>
+            </div>
+
+            <div class="control-group checkbox-group">
+                <label>
+                    <input type="checkbox" id="lowStockFilter" />
+                    Show Low Stock Only (qty &lt; 5)
+                </label>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- ====== ANALYTICS SECTION ====== -->
+    <section class="analytics-section">
+        <div class="analytics-cards">
+            <div class="stat-card">
+                <span class="stat-label">Total Products</span>
+                <span class="stat-value" id="totalProducts">0</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">Inventory Value (₹)</span>
+                <span class="stat-value" id="totalValue">₹0</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">Out of Stock</span>
+                <span class="stat-value" id="outOfStock">0</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- ====== PRODUCT GRID ====== -->
+    <section class="products-section">
+        <h2 class="section-title">Products</h2>
+
+        <!-- loading shown while simulated API call runs -->
+        <div id="loadingMsg" class="loading-msg">
+            <div class="spinner"></div>
+            <p>Loading products, please wait...</p>
+        </div>
+
+        <div id="productGrid" class="product-grid" style="display:none;"></div>
+
+        <p id="noProductsMsg" class="no-products-msg" style="display:none;">
+            No products found. Try adjusting your filters.
+        </p>
+
+        <!-- pagination controls -->
+        <div id="paginationControls" class="pagination-controls"></div>
+    </section>
+
+    <!-- ====== ADD PRODUCT FORM ====== -->
+    <section class="add-product-section">
+        <h2 class="section-title">Add New Product</h2>
+        <form id="addProductForm" class="product-form" novalidate>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="productName">Product Name *</label>
+                    <input type="text" id="productName" placeholder="Enter product name" />
+                    <span class="error-msg" id="nameError"></span>
+                </div>
+                <div class="form-group">
+                    <label for="productPrice">Price (₹) *</label>
+                    <input type="number" id="productPrice" placeholder="e.g. 1500" min="1" />
+                    <span class="error-msg" id="priceError"></span>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="productStock">Stock Quantity *</label>
+                    <input type="number" id="productStock" placeholder="e.g. 20" min="0" />
+                    <span class="error-msg" id="stockError"></span>
+                </div>
+                <div class="form-group">
+                    <label for="productCategory">Category *</label>
+                    <select id="productCategory">
+                        <option value="">-- Select Category --</option>
+                        <option value="electronics">Electronics</option>
+                        <option value="clothing">Clothing</option>
+                        <option value="books">Books</option>
+                        <option value="accessories">Accessories</option>
+                    </select>
+                    <span class="error-msg" id="categoryError"></span>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-add">+ Add Product</button>
+        </form>
+    </section>
+
+    <script src="js/script.js"></script>
+</body>
+</html>
