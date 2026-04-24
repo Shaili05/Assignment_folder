@@ -8,9 +8,11 @@ import lombok.NoArgsConstructor;
 import java.time.Instant;
 
 /**
- * Standard API response wrapper for all endpoints.
- * Every API response will be wrapped in this structure.
- * @param <T> the type of data being returned
+ * Wrapper for all API responses in the system.
+ * Every endpoint returns this same structure so frontend
+ * always knows what to expect.
+ *
+ * @param <T> type of data being returned
  */
 @Data
 @Builder
@@ -18,23 +20,24 @@ import java.time.Instant;
 @AllArgsConstructor
 public class ApiResponseDto<T> {
 
-    /** Status of the response - "success" or "error". */
+    /** Either "success" or "error". */
     private String status;
 
-    /** Human readable message about the response. */
+    /** Short message about what happened. */
     private String message;
 
-    /** The actual data being returned. */
+    /** Actual data, can be anything depending on the endpoint. */
     private T data;
 
-    /** Timestamp of when the response was generated. */
+    /** When this response was created. */
     private Instant timestamp;
 
     /**
-     * Creates a success response with data.
-     * @param <T> the type of data
+     * Quick way to return success with data.
+     *
+     * @param <T> data type
      * @param data the data to return
-     * @return success ApiResponseDto
+     * @return success response
      */
     public static <T> ApiResponseDto<T> success(final T data) {
         return ApiResponseDto.<T>builder()
@@ -46,13 +49,15 @@ public class ApiResponseDto<T> {
     }
 
     /**
-     * Creates a success response with data and custom message.
-     * @param <T> the type of data
+     * Success response with a custom message.
+     *
+     * @param <T> data type
      * @param data the data to return
-     * @param msg custom message
-     * @return success ApiResponseDto
+     * @param msg custom message to show
+     * @return success response
      */
-    public static <T> ApiResponseDto<T> success(final T data, final String msg) {
+    public static <T> ApiResponseDto<T> success(
+            final T data, final String msg) {
         return ApiResponseDto.<T>builder()
                 .status("success")
                 .message(msg)
@@ -62,10 +67,11 @@ public class ApiResponseDto<T> {
     }
 
     /**
-     * Creates an error response.
-     * @param <T> the type of data
+     * Used when something goes wrong.
+     *
+     * @param <T> data type
      * @param msg error message
-     * @return error ApiResponseDto
+     * @return error response
      */
     public static <T> ApiResponseDto<T> error(final String msg) {
         return ApiResponseDto.<T>builder()

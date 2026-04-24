@@ -16,8 +16,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * Entity representing a user in the reimbursement system.
- * A user can be an Admin, Manager, or Employee.
+ * User entity - maps to the users table in database.
+ * Can be ADMIN, MANAGER or EMPLOYEE depending on the role.
  */
 @Entity
 @Table(name = "users")
@@ -26,31 +26,31 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class User {
 
-    /** Unique identifier for the user. */
+    /** Auto generated primary key. */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    /** Full name of the user. */
+    /** Name of the user. */
     @Column(nullable = false)
     private String name;
 
-    /** Company email address - must be unique. */
+    /** Email must be unique across all users. */
     @Column(nullable = false, unique = true)
     private String email;
 
-    /** Encrypted password of the user. */
+    /** Stored as BCrypt hash, never plain text. */
     @Column(nullable = false)
     private String password;
 
-    /** Role of the user in the system. */
+    /** Role decides what the user can do in the system. */
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Role role;
 
     /**
-     * The manager assigned to this employee.
-     * Null if user is Admin or Manager.
+     * Manager assigned to this user.
+     * Will be null for admins and managers.
      */
     @ManyToOne
     @JoinColumn(name = "manager_id")

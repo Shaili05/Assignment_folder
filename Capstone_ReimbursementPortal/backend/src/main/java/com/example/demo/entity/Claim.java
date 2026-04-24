@@ -10,6 +10,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -17,9 +19,11 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 /**
- * Entity representing a reimbursement claim in the system.
+ * Claim entity - maps to the claims table.
+ * Each claim is submitted by an employee and reviewed by manager or admin.
  */
 @Entity
 @Table(name = "claims")
@@ -28,58 +32,58 @@ import java.time.LocalDate;
 @AllArgsConstructor
 public class Claim {
 
-    /** Unique identifier for the claim. */
+    /** Auto generated id for each claim. */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    /** Amount requested for reimbursement. */
+    /** How much money the employee is claiming. */
     @Column(nullable = false)
     private BigDecimal amount;
 
-    /** Date of the expense. */
+    /** Date when the expense happened. */
     @Column(nullable = false)
     private LocalDate date;
 
-    /** Description of the expense. */
+    /** What the expense was for. */
     @Column(nullable = false)
     private String description;
 
-    /** Current status of the claim. */
+    /** Tracks where the claim is in the workflow. */
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private ClaimStatus status;
 
-    /** Comments added by the reviewer. */
+    /** Manager or admin can add a comment when approving or rejecting. */
     private String reviewerComment;
 
-    /** Employee who submitted the claim. */
+    /** Who submitted this claim. */
     @ManyToOne
     @JoinColumn(name = "employee_id", nullable = false)
     private User employee;
 
-    /** Manager or Admin who reviews the claim. */
+    /** Who will review this claim - assigned automatically. */
     @ManyToOne
     @JoinColumn(name = "reviewer_id")
     private User reviewer;
 
-    /** Date and time when the claim was created. */
+    /** Set automatically when claim is first created. */
     @Column(nullable = false, updatable = false)
-    private java.time.LocalDateTime createdAt;
+    private LocalDateTime createdAt;
 
-    /** Date and time when the claim was last updated. */
-    private java.time.LocalDateTime updatedAt;
+    /** Updates every time claim is modified. */
+    private LocalDateTime updatedAt;
 
-    /** Sets createdAt and updatedAt before first save. */
-    @jakarta.persistence.PrePersist
+    /** Runs before first save to set timestamps. */
+    @PrePersist
     protected void onCreate() {
-        createdAt = java.time.LocalDateTime.now();
-        updatedAt = java.time.LocalDateTime.now();
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
     }
 
-    /** Updates updatedAt before every update. */
-    @jakarta.persistence.PreUpdate
+    /** Runs before every update to refresh updatedAt. */
+    @PreUpdate
     protected void onUpdate() {
-        updatedAt = java.time.LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
     }
 }
