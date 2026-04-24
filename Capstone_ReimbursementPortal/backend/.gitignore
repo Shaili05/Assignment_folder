@@ -31,3 +31,7 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# Hide sensitive configuration
+application-prod.properties
+*.env
