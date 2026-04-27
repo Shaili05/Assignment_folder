@@ -42,3 +42,24 @@ mvn spring-boot:run
 Runs on port 8084.
 H2 console available at http://localhost:8084/h2-console
 
+# Session 5 additions
+
+Added logging, unit tests and a notification client on top of the session 4 code.
+
+# Logging
+Added SLF4J logger in both Controller and Service.
+Every API call and important step gets logged so it is easy to debug.
+
+# NotificationServiceClient
+A dummy client class that simulates sending a notification.
+It gets called from the service whenever a new todo is created.
+Output looks like: "Notification sent: New TODO created: Buy groceries"
+
+# Unit Tests
+Written 9 unit tests for TodoService using JUnit and Mockito.
+Tests cover: create, get all, get by id, update, delete and validation cases.
+All tests pass with BUILD SUCCESS.
+
+To run tests:
+cd java/session4
+mvn test
