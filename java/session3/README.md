@@ -46,3 +46,8 @@ repository -- stores and manages the data
 model -- the User class  
 
 # How to run
+
+cd java/session3
+mvn spring-boot:run
+
+App runs on port 8083.
