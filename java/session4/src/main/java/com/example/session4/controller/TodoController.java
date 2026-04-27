@@ -3,6 +3,8 @@ package com.example.session4.controller;
 import com.example.session4.dto.TodoDTO;
 import com.example.session4.service.TodoService;
 import jakarta.validation.Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -13,6 +15,8 @@ import java.util.List;
 @RequestMapping("/todos")
 public class TodoController {
 
+    private static final Logger logger = LoggerFactory.getLogger(TodoController.class);
+
     private final TodoService todoService;
 
     public TodoController(TodoService todoService) {
@@ -21,27 +25,32 @@ public class TodoController {
 
     @PostMapping
     public ResponseEntity<TodoDTO> createTodo(@Valid @RequestBody TodoDTO dto) {
+        logger.info("POST /todos called");
         TodoDTO created = todoService.createTodo(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     @GetMapping
     public ResponseEntity<List<TodoDTO>> getAllTodos() {
+        logger.info("GET /todos called");
         return ResponseEntity.ok(todoService.getAllTodos());
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<TodoDTO> getTodoById(@PathVariable Long id) {
+        logger.info("GET /todos/{} called", id);
         return ResponseEntity.ok(todoService.getTodoById(id));
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<TodoDTO> updateTodo(@PathVariable Long id, @RequestBody TodoDTO dto) {
+        logger.info("PUT /todos/{} called", id);
         return ResponseEntity.ok(todoService.updateTodo(id, dto));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteTodo(@PathVariable Long id) {
+        logger.info("DELETE /todos/{} called", id);
         todoService.deleteTodo(id);
         return ResponseEntity.ok("Todo deleted successfully");
     }
