@@ -1,5 +1,6 @@
 package com.example.demo.service;
 
+import com.example.demo.dto.ClaimActionRequestDto;
 import com.example.demo.dto.ClaimRequestDto;
 import com.example.demo.dto.ClaimResponseDto;
 import com.example.demo.entity.Claim;
@@ -104,6 +105,102 @@ public class ClaimServiceImpl implements ClaimService {
                         "Employee not found with ID: " + employeeId));
 
         return claimRepository.findByEmployee(employee, pageable)
+                .map(this::mapToResponse);
+    }
+
+    /**
+     * Approves a claim.
+     * Only the assigned reviewer can approve it.
+     *
+     * @param claimId claim to approve
+     * @param dto reviewer ID and optional comment
+     * @return updated claim
+     */
+    @Override
+    public ClaimResponseDto approveClaim(
+            final Long claimId,
+            final ClaimActionRequestDto dto) {
+        logger.info("Approving claim ID: {}", claimId);
+
+        Claim claim = claimRepository.findById(claimId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Claim not found with ID: " + claimId));
+
+        // only SUBMITTED claims can be approved
+        if (claim.getStatus() != ClaimStatus.SUBMITTED) {
+            throw new IllegalArgumentException(
+                    "Only SUBMITTED claims can be approved");
+        }
+
+        // check reviewer is the assigned one
+        if (!claim.getReviewer().getId().equals(dto.getReviewerId())) {
+            throw new IllegalArgumentException(
+                    "You are not assigned to review this claim");
+        }
+
+        claim.setStatus(ClaimStatus.APPROVED);
+        claim.setReviewerComment(dto.getComment());
+        Claim updated = claimRepository.save(claim);
+        logger.info("Claim ID: {} approved", claimId);
+
+        return mapToResponse(updated);
+    }
+
+    /**
+     * Rejects a claim.
+     * Only the assigned reviewer can reject it.
+     *
+     * @param claimId claim to reject
+     * @param dto reviewer ID and comment
+     * @return updated claim
+     */
+    @Override
+    public ClaimResponseDto rejectClaim(
+            final Long claimId,
+            final ClaimActionRequestDto dto) {
+        logger.info("Rejecting claim ID: {}", claimId);
+
+        Claim claim = claimRepository.findById(claimId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Claim not found with ID: " + claimId));
+
+        // only SUBMITTED claims can be rejected
+        if (claim.getStatus() != ClaimStatus.SUBMITTED) {
+            throw new IllegalArgumentException(
+                    "Only SUBMITTED claims can be rejected");
+        }
+
+        // check reviewer is the assigned one
+        if (!claim.getReviewer().getId().equals(dto.getReviewerId())) {
+            throw new IllegalArgumentException(
+                    "You are not assigned to review this claim");
+        }
+
+        claim.setStatus(ClaimStatus.REJECTED);
+        claim.setReviewerComment(dto.getComment());
+        Claim updated = claimRepository.save(claim);
+        logger.info("Claim ID: {} rejected", claimId);
+
+        return mapToResponse(updated);
+    }
+
+    /**
+     * Gets all claims assigned to a reviewer.
+     *
+     * @param reviewerId the reviewer ID
+     * @param pageable page and size
+     * @return paginated claims
+     */
+    @Override
+    public Page<ClaimResponseDto> getClaimsByReviewer(
+            final Long reviewerId, final Pageable pageable) {
+        logger.info("Fetching claims for reviewer ID: {}", reviewerId);
+
+        User reviewer = userRepository.findById(reviewerId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Reviewer not found with ID: " + reviewerId));
+
+        return claimRepository.findByReviewer(reviewer, pageable)
                 .map(this::mapToResponse);
     }
 

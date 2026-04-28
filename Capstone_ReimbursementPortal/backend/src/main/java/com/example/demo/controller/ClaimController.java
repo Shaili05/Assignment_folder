@@ -1,6 +1,7 @@
 package com.example.demo.controller;
 
 import com.example.demo.dto.ApiResponseDto;
+import com.example.demo.dto.ClaimActionRequestDto;
 import com.example.demo.dto.ClaimRequestDto;
 import com.example.demo.dto.ClaimResponseDto;
 import com.example.demo.service.ClaimService;
@@ -13,7 +14,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -72,6 +75,70 @@ public class ClaimController {
         Page<ClaimResponseDto> claims =
                 claimService.getClaimsByEmployee(
                         employeeId, PageRequest.of(page, size));
+        return ResponseEntity.ok(
+                ApiResponseDto.success(claims,
+                        "Claims fetched successfully"));
+    }
+
+    /**
+     * PUT /api/claims/{id}/approve
+     * Reviewer approves a claim.
+     *
+     * @param id the claim ID
+     * @param dto reviewer ID and optional comment
+     * @return updated claim
+     */
+    @PutMapping("/{id}/approve")
+    public ResponseEntity<ApiResponseDto<ClaimResponseDto>> approveClaim(
+            @PathVariable final Long id,
+            @RequestBody final ClaimActionRequestDto dto) {
+        logger.info("Approve request for claim ID: {}", id);
+        ClaimResponseDto response =
+                claimService.approveClaim(id, dto);
+        return ResponseEntity.ok(
+                ApiResponseDto.success(response,
+                        "Claim approved successfully"));
+    }
+
+    /**
+     * PUT /api/claims/{id}/reject
+     * Reviewer rejects a claim.
+     *
+     * @param id the claim ID
+     * @param dto reviewer ID and comment
+     * @return updated claim
+     */
+    @PutMapping("/{id}/reject")
+    public ResponseEntity<ApiResponseDto<ClaimResponseDto>> rejectClaim(
+            @PathVariable final Long id,
+            @RequestBody final ClaimActionRequestDto dto) {
+        logger.info("Reject request for claim ID: {}", id);
+        ClaimResponseDto response =
+                claimService.rejectClaim(id, dto);
+        return ResponseEntity.ok(
+                ApiResponseDto.success(response,
+                        "Claim rejected successfully"));
+    }
+
+    /**
+     * GET /api/claims/reviewer?reviewerId=1 and page=0 and size=10
+     * Reviewer views all claims assigned to them.
+     *
+     * @param reviewerId the reviewer ID
+     * @param page page number
+     * @param size page size
+     * @return paginated list of claims
+     */
+    @GetMapping("/reviewer")
+    public ResponseEntity<ApiResponseDto<Page<ClaimResponseDto>>>
+    getReviewerClaims(
+            @RequestParam final Long reviewerId,
+            @RequestParam(defaultValue = "0") final int page,
+            @RequestParam(defaultValue = "10") final int size) {
+        logger.info("Fetching claims for reviewer ID: {}", reviewerId);
+        Page<ClaimResponseDto> claims =
+                claimService.getClaimsByReviewer(
+                        reviewerId, PageRequest.of(page, size));
         return ResponseEntity.ok(
                 ApiResponseDto.success(claims,
                         "Claims fetched successfully"));
