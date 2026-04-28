@@ -9,21 +9,21 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
 /**
- * Security config for the app.
- * For now I am allowing all requests freely
- * since we are handling roles manually in the service layer.
+ * Security configuration class.
+ * Disables default Spring Security login page.
+ * Provides BCrypt password encoder as a Spring bean.
  */
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
     /**
-     * Disabling CSRF and allowing all requests.
-     * CSRF is not needed for REST APIs.
+     * Configures HTTP security to permit all requests.
+     * CSRF disabled because REST APIs use stateless requests.
      *
-     * @param http HttpSecurity object
-     * @return built security filter chain
-     * @throws Exception if something goes wrong in config
+     * @param http the HttpSecurity configuration object
+     * @return configured SecurityFilterChain
+     * @throws Exception if configuration fails
      */
     @Bean
     public SecurityFilterChain securityFilterChain(
@@ -37,10 +37,11 @@ public class SecurityConfig {
     }
 
     /**
-     * BCrypt encoder bean.
-     * Using this to hash passwords before saving to database.
+     * Creates BCrypt password encoder bean.
+     * This is injected into UserServiceImpl for password hashing.
+     * BCrypt is a strong one-way hashing algorithm.
      *
-     * @return PasswordEncoder instance
+     * @return BCryptPasswordEncoder instance
      */
     @Bean
     public PasswordEncoder passwordEncoder() {

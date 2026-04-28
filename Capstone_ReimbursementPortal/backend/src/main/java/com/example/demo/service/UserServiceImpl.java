@@ -17,7 +17,7 @@ import org.springframework.stereotype.Service;
 
 /**
  * Service class for user related operations.
- * I always call the validator first before doing anything in the database.
+ * Validator is called first before any database operation.
  */
 @Service
 @RequiredArgsConstructor
@@ -34,8 +34,8 @@ public class UserServiceImpl implements UserService {
     private final UserValidator userValidator;
 
     /**
-     * Injected from SecurityConfig bean.
-     * Using BCrypt to hash passwords.
+     * BCrypt password encoder injected from SecurityConfig.
+     * Using interface PasswordEncoder for flexibility.
      */
     private final PasswordEncoder passwordEncoder;
 
@@ -57,7 +57,7 @@ public class UserServiceImpl implements UserService {
         user.setName(dto.getName());
         user.setEmail(dto.getEmail());
 
-        // never save plain text password
+        // never save plain text password - BCrypt hashes it
         user.setPassword(passwordEncoder.encode(dto.getPassword()));
         user.setRole(Role.valueOf(dto.getRole().toUpperCase()));
 
@@ -69,7 +69,7 @@ public class UserServiceImpl implements UserService {
 
     /**
      * Deletes user by ID.
-     * Checks if user exists first.
+     * Validates user exists before attempting deletion.
      *
      * @param id user ID to delete
      */
@@ -77,7 +77,7 @@ public class UserServiceImpl implements UserService {
     public void deleteUser(final Long id) {
         logger.info("Deleting user ID: {}", id);
 
-        // make sure user exists before trying to delete
+        // validate user exists before trying to delete
         userValidator.validateUserExists(id);
 
         userRepository.deleteById(id);
@@ -86,7 +86,7 @@ public class UserServiceImpl implements UserService {
 
     /**
      * Gets all users with pagination.
-     * Using pageable so we don't load everything at once.
+     * Pagination prevents loading all records at once.
      *
      * @param pageable page number and size
      * @return one page of users
@@ -102,7 +102,8 @@ public class UserServiceImpl implements UserService {
 
     /**
      * Assigns a manager to an employee.
-     * Both users must exist and manager must have correct role.
+     * findById with orElseThrow already handles not-found case
+     * so no need for separate validateUserExists calls here.
      *
      * @param employeeId employee to update
      * @param managerId manager to assign
@@ -114,9 +115,7 @@ public class UserServiceImpl implements UserService {
         logger.info("Assigning manager {} to employee {}",
                 managerId, employeeId);
 
-        userValidator.validateUserExists(employeeId);
-        userValidator.validateUserExists(managerId);
-
+        // orElseThrow handles not-found - no need for validateUserExists
         User employee = userRepository.findById(employeeId)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Employee not found with ID: " + employeeId));
@@ -125,7 +124,7 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Manager not found with ID: " + managerId));
 
-        // only MANAGER or ADMIN can be assigned as a manager
+        // only MANAGER or ADMIN role can be assigned as a manager
         if (manager.getRole() != Role.MANAGER
                 && manager.getRole() != Role.ADMIN) {
             throw new IllegalArgumentException(
@@ -142,7 +141,7 @@ public class UserServiceImpl implements UserService {
 
     /**
      * Converts User entity to response DTO.
-     * I don't return the entity directly to avoid exposing db fields.
+     * Entity is never returned directly to avoid exposing DB fields.
      *
      * @param user entity from database
      * @return response DTO

@@ -8,6 +8,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Catches all exceptions in one place.
@@ -59,19 +61,24 @@ public class GlobalExceptionHandler {
      * @param ex the validation exception
      * @return 400 with which field failed and why
      */
+    /**
+     * Handles validation failures from @Valid annotation.
+     * Returns ALL validation errors at once instead of just the first one.
+     *
+     * @param ex the MethodArgumentNotValidException that was thrown
+     * @return 400 response with all validation errors
+     */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiResponseDto<Object>> handleValidationErrors(
             final MethodArgumentNotValidException ex) {
-        String errorMessage = ex.getBindingResult()
+        List<String> errors = ex.getBindingResult()
                 .getFieldErrors()
                 .stream()
-                .map(error -> error.getField() + ": "
-                        + error.getDefaultMessage())
-                .findFirst()
-                .orElse("Validation failed");
-        logger.error("Validation error: {}", errorMessage);
+                .map(error -> error.getField() + ": " + error.getDefaultMessage())
+                .collect(Collectors.toList());
+        logger.error("Validation errors occurred: {}", errors);
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
-                .body(ApiResponseDto.error(errorMessage));
+                .body(ApiResponseDto.error(errors.toString()));
     }
 }
