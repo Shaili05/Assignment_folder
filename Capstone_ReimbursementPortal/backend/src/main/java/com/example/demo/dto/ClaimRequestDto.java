@@ -3,18 +3,20 @@ package com.example.demo.dto;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
 /**
- * This is what the API receives when an employee submits a claim.
- * I added basic validations so invalid data gets rejected early.
+ * Request DTO received when an employee submits a claim.
+ * Validations ensure invalid data is rejected before processing.
  */
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class ClaimRequestDto {
@@ -24,19 +26,15 @@ public class ClaimRequestDto {
     @DecimalMin(value = "0.01", message = "Amount must be greater than 0")
     private BigDecimal amount;
 
-    /** Date when the expense happened. */
+    /** Date when the expense occurred. */
     @NotNull(message = "Date is required")
     private LocalDate date;
 
-    /** What the expense was for. */
+    /** Description of what the expense was for. */
     @NotBlank(message = "Description is required")
     private String description;
 
-    /**
-     * The employee ID who is submitting this claim.
-     * For now we pass it in the request manually
-     * since we don't have login/session yet.
-     */
+    /** ID of the employee submitting this claim. */
     @NotNull(message = "Employee ID is required")
     private Long employeeId;
 }

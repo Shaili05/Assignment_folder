@@ -1,18 +1,19 @@
 package com.example.demo.dto;
 
+import com.example.demo.enums.ClaimStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
 /**
- * This is what the API sends back after a claim is created or fetched.
- * I don't return the entity directly to keep things clean.
+ * Response DTO returned after a claim is created or fetched.
+ * Entity is never returned directly to avoid exposing database fields.
  */
-@Data
+@Getter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -27,18 +28,18 @@ public class ClaimResponseDto {
     /** Date of the expense. */
     private LocalDate date;
 
-    /** What the expense was for. */
+    /** Description of the expense. */
     private String description;
 
-    /** Current status - SUBMITTED, APPROVED or REJECTED. */
-    private String status;
+    /** Current status of the claim. */
+    private ClaimStatus status;
 
     /** Comment added by reviewer when approving or rejecting. */
     private String reviewerComment;
 
-    /** Name of employee who submitted this claim. */
+    /** Name of the employee who submitted this claim. */
     private String employeeName;
 
-    /** Name of reviewer assigned to this claim. */
+    /** Name of the reviewer assigned to this claim. */
     private String reviewerName;
 }

@@ -20,7 +20,8 @@
 
     <div class="card">
         <h2>Claims Assigned to Me</h2>
-        <input type="number" id="reviewerId" placeholder="Your Reviewer ID" />
+        <input type="number" id="reviewerId"
+               placeholder="Your Reviewer ID" min="1"/>
         <button onclick="loadReviewerClaims()">Load Claims</button>
         <div id="reviewerMsg" class="msg" style="display:none"></div>
         <table id="reviewerTable" style="display:none">
@@ -41,9 +42,13 @@
 
     <div class="card">
         <h2>Take Action on a Claim</h2>
-        <input type="number" id="claimId" placeholder="Claim ID" />
-        <input type="number" id="actionReviewerId" placeholder="Your Reviewer ID" />
-        <textarea id="comment" placeholder="Add a comment (required for rejection)"></textarea>
+        <input type="number" id="claimId"
+               placeholder="Claim ID" min="1"/>
+        <input type="number" id="actionReviewerId"
+               placeholder="Your Reviewer ID" min="1"/>
+        <textarea id="comment"
+                  placeholder="Add a comment (required for rejection)">
+        </textarea>
         <button class="approve" onclick="handleApprove()">Approve</button>
         <button class="reject" onclick="handleReject()">Reject</button>
         <div id="actionMsg" class="msg" style="display:none"></div>
@@ -51,88 +56,9 @@
 
 </div>
 
+<script src="js/utils.js"></script>
 <script src="js/api.js"></script>
-<script>
-    async function loadReviewerClaims() {
-        const reviewerId = document.getElementById('reviewerId').value;
-
-        if (!reviewerId) {
-            showMessage('reviewerMsg', 'Please enter your Reviewer ID', true);
-            return;
-        }
-
-        const result = await getReviewerClaims(reviewerId);
-
-        if (result.status === 'success') {
-            const claims = result.data.content;
-            const tbody = document.getElementById('reviewerBody');
-            tbody.innerHTML = '';
-
-            if (claims.length === 0) {
-                showMessage('reviewerMsg', 'No claims assigned to you', true);
-                return;
-            }
-
-            claims.forEach(claim => {
-                tbody.innerHTML += `
-                    <tr>
-                        <td>${claim.id}</td>
-                        <td>${claim.employeeName}</td>
-                        <td>₹${claim.amount}</td>
-                        <td>${claim.date}</td>
-                        <td>${claim.description}</td>
-                        <td class="${getStatusClass(claim.status)}">${claim.status}</td>
-                        <td>${claim.status === 'SUBMITTED' ? 'Pending' : 'Done'}</td>
-                    </tr>
-                `;
-            });
-
-            document.getElementById('reviewerTable').style.display = 'table';
-        } else {
-            showMessage('reviewerMsg', result.message || 'Something went wrong', true);
-        }
-    }
-
-    async function handleApprove() {
-        const claimId = document.getElementById('claimId').value;
-        const reviewerId = document.getElementById('actionReviewerId').value;
-        const comment = document.getElementById('comment').value;
-
-        if (!claimId || !reviewerId) {
-            showMessage('actionMsg', 'Please enter Claim ID and Reviewer ID', true);
-            return;
-        }
-
-        const result = await approveClaim(claimId, parseInt(reviewerId), comment);
-
-        if (result.status === 'success') {
-            showMessage('actionMsg', 'Claim approved successfully!');
-            loadReviewerClaims();
-        } else {
-            showMessage('actionMsg', result.message || 'Something went wrong', true);
-        }
-    }
-
-    async function handleReject() {
-        const claimId = document.getElementById('claimId').value;
-        const reviewerId = document.getElementById('actionReviewerId').value;
-        const comment = document.getElementById('comment').value;
-
-        if (!claimId || !reviewerId || !comment) {
-            showMessage('actionMsg', 'Please enter Claim ID, Reviewer ID and a comment', true);
-            return;
-        }
-
-        const result = await rejectClaim(claimId, parseInt(reviewerId), comment);
-
-        if (result.status === 'success') {
-            showMessage('actionMsg', 'Claim rejected successfully!');
-            loadReviewerClaims();
-        } else {
-            showMessage('actionMsg', result.message || 'Something went wrong', true);
-        }
-    }
-</script>
+<script src="js/reviewer.js"></script>
 
 </body>
 </html>

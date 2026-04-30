@@ -51,18 +51,13 @@ public class ClaimServiceImpl implements ClaimService {
         logger.info("Submitting claim for employee ID: {}",
                 dto.getEmployeeId());
 
-        // validate first
         claimValidator.validateCreateClaim(dto);
 
-        // get the employee
         User employee = userRepository.findById(dto.getEmployeeId())
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Employee not found with ID: "
                                 + dto.getEmployeeId()));
 
-        // auto assign reviewer
-        // if employee has a manager use that manager
-        // otherwise find an admin
         User reviewer = employee.getManager();
         if (reviewer == null) {
             reviewer = userRepository.findAll()
@@ -73,7 +68,6 @@ public class ClaimServiceImpl implements ClaimService {
                             "No admin found to assign as reviewer"));
         }
 
-        // build the claim
         Claim claim = new Claim();
         claim.setAmount(dto.getAmount());
         claim.setDate(dto.getDate());
@@ -126,13 +120,11 @@ public class ClaimServiceImpl implements ClaimService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Claim not found with ID: " + claimId));
 
-        // only SUBMITTED claims can be approved
         if (claim.getStatus() != ClaimStatus.SUBMITTED) {
             throw new IllegalArgumentException(
                     "Only SUBMITTED claims can be approved");
         }
 
-        // check reviewer is the assigned one
         if (!claim.getReviewer().getId().equals(dto.getReviewerId())) {
             throw new IllegalArgumentException(
                     "You are not assigned to review this claim");
@@ -164,13 +156,11 @@ public class ClaimServiceImpl implements ClaimService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Claim not found with ID: " + claimId));
 
-        // only SUBMITTED claims can be rejected
         if (claim.getStatus() != ClaimStatus.SUBMITTED) {
             throw new IllegalArgumentException(
                     "Only SUBMITTED claims can be rejected");
         }
 
-        // check reviewer is the assigned one
         if (!claim.getReviewer().getId().equals(dto.getReviewerId())) {
             throw new IllegalArgumentException(
                     "You are not assigned to review this claim");
@@ -217,7 +207,7 @@ public class ClaimServiceImpl implements ClaimService {
                 .amount(claim.getAmount())
                 .date(claim.getDate())
                 .description(claim.getDescription())
-                .status(claim.getStatus().name())
+                .status(claim.getStatus())
                 .reviewerComment(claim.getReviewerComment())
                 .employeeName(claim.getEmployee().getName())
                 .reviewerName(claim.getReviewer().getName())

@@ -48,8 +48,11 @@ public class ClaimController {
     @PostMapping
     public ResponseEntity<ApiResponseDto<ClaimResponseDto>> submitClaim(
             @Valid @RequestBody final ClaimRequestDto dto) {
-        logger.info("Received claim submission request");
+        logger.info("Received claim submission request for employee ID: {}",
+                dto.getEmployeeId());
         ClaimResponseDto response = claimService.submitClaim(dto);
+        logger.info("Claim submission completed. Claim ID: {}",
+                response.getId());
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(ApiResponseDto.success(response,
@@ -57,17 +60,17 @@ public class ClaimController {
     }
 
     /**
-     * GET /api/claims/my?employeeId=1 and page=0 and size=10
-     * Employee views their own claims.
+     * GET /api/claims/employee-claims?employeeId=1&page=0&size=10
+     * Employee views their own submitted claims.
      *
      * @param employeeId the employee ID
      * @param page page number
      * @param size page size
      * @return paginated list of claims
      */
-    @GetMapping("/my")
+    @GetMapping("/employee-claims")
     public ResponseEntity<ApiResponseDto<Page<ClaimResponseDto>>>
-    getMyClaims(
+    getEmployeeClaims(
             @RequestParam final Long employeeId,
             @RequestParam(defaultValue = "0") final int page,
             @RequestParam(defaultValue = "10") final int size) {
@@ -75,6 +78,8 @@ public class ClaimController {
         Page<ClaimResponseDto> claims =
                 claimService.getClaimsByEmployee(
                         employeeId, PageRequest.of(page, size));
+        logger.info("Fetched {} claims for employee ID: {}",
+                claims.getTotalElements(), employeeId);
         return ResponseEntity.ok(
                 ApiResponseDto.success(claims,
                         "Claims fetched successfully"));
@@ -92,9 +97,9 @@ public class ClaimController {
     public ResponseEntity<ApiResponseDto<ClaimResponseDto>> approveClaim(
             @PathVariable final Long id,
             @RequestBody final ClaimActionRequestDto dto) {
-        logger.info("Approve request for claim ID: {}", id);
-        ClaimResponseDto response =
-                claimService.approveClaim(id, dto);
+        logger.info("Approve request received for claim ID: {}", id);
+        ClaimResponseDto response = claimService.approveClaim(id, dto);
+        logger.info("Claim ID: {} approved successfully", id);
         return ResponseEntity.ok(
                 ApiResponseDto.success(response,
                         "Claim approved successfully"));
@@ -112,16 +117,16 @@ public class ClaimController {
     public ResponseEntity<ApiResponseDto<ClaimResponseDto>> rejectClaim(
             @PathVariable final Long id,
             @RequestBody final ClaimActionRequestDto dto) {
-        logger.info("Reject request for claim ID: {}", id);
-        ClaimResponseDto response =
-                claimService.rejectClaim(id, dto);
+        logger.info("Reject request received for claim ID: {}", id);
+        ClaimResponseDto response = claimService.rejectClaim(id, dto);
+        logger.info("Claim ID: {} rejected successfully", id);
         return ResponseEntity.ok(
                 ApiResponseDto.success(response,
                         "Claim rejected successfully"));
     }
 
     /**
-     * GET /api/claims/reviewer?reviewerId=1 and page=0 and size=10
+     * GET /api/claims/reviewer-claims?reviewerId=1&page=0&size=10
      * Reviewer views all claims assigned to them.
      *
      * @param reviewerId the reviewer ID
@@ -129,7 +134,7 @@ public class ClaimController {
      * @param size page size
      * @return paginated list of claims
      */
-    @GetMapping("/reviewer")
+    @GetMapping("/reviewer-claims")
     public ResponseEntity<ApiResponseDto<Page<ClaimResponseDto>>>
     getReviewerClaims(
             @RequestParam final Long reviewerId,
@@ -139,6 +144,8 @@ public class ClaimController {
         Page<ClaimResponseDto> claims =
                 claimService.getClaimsByReviewer(
                         reviewerId, PageRequest.of(page, size));
+        logger.info("Fetched {} claims for reviewer ID: {}",
+                claims.getTotalElements(), reviewerId);
         return ResponseEntity.ok(
                 ApiResponseDto.success(claims,
                         "Claims fetched successfully"));
