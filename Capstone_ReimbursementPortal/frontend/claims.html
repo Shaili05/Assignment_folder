@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Claims</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header>
+    <h1>Reimbursement Portal</h1>
+    <nav>
+        <a href="index.html">Home</a>
+        <a href="claims.html">My Claims</a>
+    </nav>
+</header>
+
+<div class="container">
+
+    <div class="card">
+        <h2>Submit a Claim</h2>
+        <input type="number" id="employeeId" placeholder="Your Employee ID" />
+        <input type="number" id="amount" placeholder="Amount (e.g. 5000)" step="0.01" />
+        <input type="date" id="date" />
+        <textarea id="description" placeholder="What was this expense for?"></textarea>
+        <button onclick="handleSubmitClaim()">Submit Claim</button>
+        <div id="submitMsg" class="msg" style="display:none"></div>
+    </div>
+
+    <div class="card">
+        <h2>My Previous Claims</h2>
+        <input type="number" id="viewEmployeeId" placeholder="Your Employee ID" />
+        <button onclick="handleViewClaims()">View My Claims</button>
+        <div id="claimsMsg" class="msg" style="display:none"></div>
+        <table id="claimsTable" style="display:none">
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Amount</th>
+                <th>Date</th>
+                <th>Description</th>
+                <th>Status</th>
+                <th>Reviewer Comment</th>
+            </tr>
+            </thead>
+            <tbody id="claimsBody"></tbody>
+        </table>
+    </div>
+
+</div>
+
+<script src="js/api.js"></script>
+<script>
+    async function handleSubmitClaim() {
+        const data = {
+            employeeId: parseInt(document.getElementById('employeeId').value),
+            amount: parseFloat(document.getElementById('amount').value),
+            date: document.getElementById('date').value,
+            description: document.getElementById('description').value
+        };
+
+        if (!data.employeeId || !data.amount || !data.date || !data.description) {
+            showMessage('submitMsg', 'Please fill all fields', true);
+            return;
+        }
+
+        const result = await submitClaim(data);
+
+        if (result.status === 'success') {
+            showMessage('submitMsg', 'Claim submitted successfully!');
+        } else {
+            showMessage('submitMsg', result.message || 'Something went wrong', true);
+        }
+    }
+
+    async function handleViewClaims() {
+        const empId = document.getElementById('viewEmployeeId').value;
+
+        if (!empId) {
+            showMessage('claimsMsg', 'Please enter your Employee ID', true);
+            return;
+        }
+
+        const result = await getMyClaims(empId);
+
+        if (result.status === 'success') {
+            const claims = result.data.content;
+            const tbody = document.getElementById('claimsBody');
+            tbody.innerHTML = '';
+
+            if (claims.length === 0) {
+                showMessage('claimsMsg', 'No claims found', true);
+                return;
+            }
+
+            claims.forEach(claim => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${claim.id}</td>
+                        <td>₹${claim.amount}</td>
+                        <td>${claim.date}</td>
+                        <td>${claim.description}</td>
+                        <td class="${getStatusClass(claim.status)}">${claim.status}</td>
+                        <td>${claim.reviewerComment || '-'}</td>
+                    </tr>
+                `;
+            });
+
+            document.getElementById('claimsTable').style.display = 'table';
+        } else {
+            showMessage('claimsMsg', result.message || 'Something went wrong', true);
+        }
+    }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reimbursement Portal</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header>
+    <h1>Reimbursement Portal</h1>
+</header>
+
+<div class="home-container">
+    <div class="card">
+        <h2>Welcome</h2>
+        <p style="margin-bottom: 20px; color: #666; font-size: 14px;">
+            Select your role to continue
+        </p>
+
+        <select id="roleSelect">
+            <option value="">-- Select Role --</option>
+            <option value="ADMIN">Admin</option>
+            <option value="MANAGER">Manager</option>
+            <option value="EMPLOYEE">Employee</option>
+        </select>
+
+        <input type="number" id="userId" placeholder="Enter your User ID" />
+
+        <button onclick="goToDashboard()">Continue</button>
+
+        <div id="msg" class="msg" style="display:none"></div>
+    </div>
+</div>
+
+<script>
+    function goToDashboard() {
+        const role = document.getElementById('roleSelect').value;
+        const userId = document.getElementById('userId').value;
+
+        if (!role || !userId) {
+            showMsg('Please select a role and enter your ID', true);
+            return;
+        }
+
+        localStorage.setItem('userId', userId);
+        localStorage.setItem('role', role);
+
+        if (role === 'ADMIN') {
+            window.location.href = 'users.html';
+        } else if (role === 'MANAGER') {
+            window.location.href = 'reviewer.html';
+        } else {
+            window.location.href = 'claims.html';
+        }
+    }
+
+    function showMsg(text, isError) {
+        const el = document.getElementById('msg');
+        el.textContent = text;
+        el.className = 'msg ' + (isError ? 'error' : 'success');
+        el.style.display = 'block';
+    }
+</script>
+
+</body>
+</html>
