@@ -268,7 +268,7 @@ class DemoApplicationTests {
 
 		assertNotNull(result);
 		assertEquals("Travel expenses", result.getDescription());
-		assertEquals("SUBMITTED", result.getStatus());
+		assertEquals(ClaimStatus.SUBMITTED, result.getStatus());
 	}
 
 	/**
@@ -307,7 +307,7 @@ class DemoApplicationTests {
 		ClaimResponseDto result = claimService.approveClaim(1L, dto);
 
 		assertNotNull(result);
-		assertEquals("APPROVED", result.getStatus());
+		assertEquals(ClaimStatus.APPROVED, result.getStatus());
 	}
 
 	/**
@@ -346,7 +346,7 @@ class DemoApplicationTests {
 		ClaimResponseDto result = claimService.rejectClaim(1L, dto);
 
 		assertNotNull(result);
-		assertEquals("REJECTED", result.getStatus());
+		assertEquals(ClaimStatus.REJECTED, result.getStatus());
 	}
 
 	/**
@@ -560,6 +560,168 @@ class DemoApplicationTests {
 
 		assertThrows(IllegalArgumentException.class, () ->
 				claimService.approveClaim(1L, dto));
+	}
+
+	/**
+	 * Test ResourceNotFoundException message.
+	 */
+	@Test
+	void resourceNotFoundException_hasCorrectMessage() {
+		ResourceNotFoundException ex =
+				new ResourceNotFoundException("User not found");
+		assertEquals("User not found", ex.getMessage());
+	}
+
+	/**
+	 * Test ClaimActionRequestDto getters and setters.
+	 */
+	@Test
+	void claimActionRequestDto_gettersSetters() {
+		ClaimActionRequestDto dto = new ClaimActionRequestDto();
+		dto.setReviewerId(1L);
+		dto.setComment("Test comment");
+		assertEquals(1L, dto.getReviewerId());
+		assertEquals("Test comment", dto.getComment());
+	}
+
+	/**
+	 * Test ClaimRequestDto getters and setters.
+	 */
+	@Test
+	void claimRequestDto_gettersSetters() {
+		ClaimRequestDto dto = new ClaimRequestDto();
+		dto.setAmount(new BigDecimal("5000"));
+		dto.setDate(LocalDate.now());
+		dto.setDescription("Test");
+		dto.setEmployeeId(1L);
+		assertEquals(new BigDecimal("5000"), dto.getAmount());
+		assertEquals("Test", dto.getDescription());
+		assertEquals(1L, dto.getEmployeeId());
+	}
+
+	/**
+	 * Test UserRequestDto getters and setters.
+	 */
+	@Test
+	void userRequestDto_gettersSetters() {
+		UserRequestDto dto = new UserRequestDto();
+		dto.setName("Test");
+		dto.setEmail("test@company.com");
+		dto.setPassword("Test@1234");
+		dto.setRole("EMPLOYEE");
+		assertEquals("Test", dto.getName());
+		assertEquals("test@company.com", dto.getEmail());
+		assertEquals("EMPLOYEE", dto.getRole());
+	}
+
+	/**
+	 * Test UserResponseDto builder.
+	 */
+	@Test
+	void userResponseDto_builderWorks() {
+		UserResponseDto dto = UserResponseDto.builder()
+				.id(1L)
+				.name("Test")
+				.email("test@company.com")
+				.role("EMPLOYEE")
+				.managerName(null)
+				.build();
+		assertEquals(1L, dto.getId());
+		assertEquals("Test", dto.getName());
+		assertEquals("EMPLOYEE", dto.getRole());
+	}
+
+	/**
+	 * Test ClaimResponseDto builder.
+	 */
+	@Test
+	void claimResponseDto_builderWorks() {
+		ClaimResponseDto dto = ClaimResponseDto.builder()
+				.id(1L)
+				.amount(new BigDecimal("5000"))
+				.description("Travel")
+				.status(ClaimStatus.SUBMITTED)
+				.employeeName("Test Employee")
+				.reviewerName("Admin User")
+				.build();
+		assertEquals(1L, dto.getId());
+		assertEquals(ClaimStatus.SUBMITTED, dto.getStatus());
+		assertEquals("Travel", dto.getDescription());
+	}
+
+	/**
+	 * Test submitClaim throws exception when employee not found.
+	 */
+	@Test
+	void submitClaim_employeeNotFound_throwsException() {
+		ClaimRequestDto dto = new ClaimRequestDto();
+		dto.setEmployeeId(99L);
+		dto.setAmount(new BigDecimal("5000"));
+		dto.setDate(LocalDate.now());
+		dto.setDescription("Test");
+
+		doNothing().when(claimValidator).validateCreateClaim(any());
+		when(userRepository.findById(99L))
+				.thenReturn(Optional.empty());
+
+		assertThrows(ResourceNotFoundException.class, () ->
+				claimService.submitClaim(dto));
+	}
+
+	/**
+	 * Test getClaimsByEmployee throws exception when employee not found.
+	 */
+	@Test
+	void getClaimsByEmployee_notFound_throwsException() {
+		when(userRepository.findById(99L))
+				.thenReturn(Optional.empty());
+
+		assertThrows(ResourceNotFoundException.class, () ->
+				claimService.getClaimsByEmployee(
+						99L, PageRequest.of(0, 10)));
+	}
+
+	/**
+	 * Test getClaimsByReviewer throws exception when reviewer not found.
+	 */
+	@Test
+	void getClaimsByReviewer_notFound_throwsException() {
+		when(userRepository.findById(99L))
+				.thenReturn(Optional.empty());
+
+		assertThrows(ResourceNotFoundException.class, () ->
+				claimService.getClaimsByReviewer(
+						99L, PageRequest.of(0, 10)));
+	}
+
+	/**
+	 * Test approveClaim throws exception when claim not found.
+	 */
+	@Test
+	void approveClaim_claimNotFound_throwsException() {
+		ClaimActionRequestDto dto = new ClaimActionRequestDto();
+		dto.setReviewerId(1L);
+
+		when(claimRepository.findById(99L))
+				.thenReturn(Optional.empty());
+
+		assertThrows(ResourceNotFoundException.class, () ->
+				claimService.approveClaim(99L, dto));
+	}
+
+	/**
+	 * Test rejectClaim throws exception when claim not found.
+	 */
+	@Test
+	void rejectClaim_claimNotFound_throwsException() {
+		ClaimActionRequestDto dto = new ClaimActionRequestDto();
+		dto.setReviewerId(1L);
+
+		when(claimRepository.findById(99L))
+				.thenReturn(Optional.empty());
+
+		assertThrows(ResourceNotFoundException.class, () ->
+				claimService.rejectClaim(99L, dto));
 	}
 
 }

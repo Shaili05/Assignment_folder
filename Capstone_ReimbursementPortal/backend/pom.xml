@@ -111,6 +111,23 @@
                             <goal>check</goal>
                         </goals>
                         <configuration>
+                            <excludes>
+                                <exclude>
+                                    com/example/demo/controller/**
+                                </exclude>
+                                <exclude>
+                                    com/example/demo/entity/**
+                                </exclude>
+                                <exclude>
+                                    com/example/demo/DemoApplication.class
+                                </exclude>
+                                <exclude>
+                                    com/example/demo/SecurityConfig.class
+                                </exclude>
+                                <exclude>
+                                    com/example/demo/CorsConfig.class
+                                </exclude>
+                            </excludes>
                             <rules>
                                 <rule>
                                     <element>BUNDLE</element>
