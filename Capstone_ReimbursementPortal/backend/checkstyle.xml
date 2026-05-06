@@ -1,0 +1,43 @@
+<?xml version="1.0"?>
+<!DOCTYPE module PUBLIC
+    "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
+    "https://checkstyle.org/dtds/configuration_1_3.dtd">
+
+<module name="Checker">
+
+    <!-- Max 120 characters per line -->
+    <module name="LineLength">
+        <property name="max" value="120"/>
+    </module>
+
+    <module name="TreeWalker">
+
+        <!-- Class names must be UpperCamelCase e.g. UserService -->
+        <module name="TypeName"/>
+
+        <!-- Method names must be lowerCamelCase e.g. getUserById -->
+        <module name="MethodName"/>
+
+        <!-- Variable names must be lowerCamelCase e.g. claimAmount -->
+        <module name="LocalVariableName"/>
+        <module name="MemberName"/>
+
+        <!-- Every public class must have a JavaDoc comment -->
+        <module name="JavadocType">
+            <property name="scope" value="public"/>
+        </module>
+
+        <!-- Every public method must have a JavaDoc comment -->
+        <module name="JavadocMethod">
+            <property name="accessModifiers" value="public"/>
+        </module>
+
+        <!-- No unused imports allowed -->
+        <module name="UnusedImports"/>
+
+        <!-- Spaces required around operators like = + - etc -->
+        <module name="WhitespaceAround"/>
+
+    </module>
+
+</module>
