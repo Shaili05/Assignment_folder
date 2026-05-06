@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Management - Reimbursement Portal</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .tab-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 24px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        .tab-btn {
+            padding: 10px 22px;
+            background: none;
+            border: none;
+            border-bottom: 3px solid transparent;
+            font-size: 14px;
+            font-weight: 600;
+            color: #718096;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: -2px;
+        }
+        .tab-btn:hover { color: #2d3748; }
+        .tab-btn.active {
+            color: #2c3e50;
+            border-bottom-color: #2c3e50;
+        }
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; }
+    </style>
+</head>
+<body>
+
+<header class="site-header">
+    <div class="header-left">
+        <div class="header-title">
+            <h1>Reimbursement Portal</h1>
+            <span class="header-subtitle">Admin Dashboard</span>
+        </div>
+    </div>
+    <div class="header-right">
+        <button class="btn-logout" onclick="logout()">Sign Out</button>
+    </div>
+</header>
+
+<div class="container">
+
+    <div class="page-title">
+        <h2>Admin Dashboard</h2>
+        <p>Manage users, assign managers, and review claims</p>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h3>All Users</h3>
+            <button class="btn-secondary" onclick="handleLoadUsers()">
+                Refresh
+            </button>
+        </div>
+        <div class="card-body">
+            <div id="usersMsg" class="msg" style="display:none"></div>
+            <div class="table-wrapper">
+                <table id="usersTable" style="display:none">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Manager</th>
+                        <th>Action</th>
+                    </tr>
+                    </thead>
+                    <tbody id="usersBody"></tbody>
+                </table>
+                <div id="usersEmpty" class="empty-state"
+                     style="display:none">
+                    <p>No users found</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="tab-buttons">
+        <button class="tab-btn active" id="btn-createUser"
+                onclick="showTab('createUser')">
+            Create User
+        </button>
+        <button class="tab-btn" id="btn-assignManager"
+                onclick="showTab('assignManager')">
+            Assign Manager
+        </button>
+        <button class="tab-btn" id="btn-adminClaims"
+                onclick="showTab('adminClaims')">
+            Claims
+        </button>
+    </div>
+
+    <div class="tab-panel active" id="tab-createUser">
+        <div class="card">
+            <div class="card-header">
+                <h3>Create New User</h3>
+            </div>
+            <div class="card-body">
+                <div class="grid-two">
+                    <div class="form-group">
+                        <label for="name">Full Name</label>
+                        <input type="text" id="name"
+                               placeholder="Enter full name" />
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email Address</label>
+                        <input type="email" id="email"
+                               placeholder="name@company.com" />
+                    </div>
+                </div>
+                <div class="grid-two">
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password"
+                               placeholder="Minimum 8 characters" />
+                    </div>
+                    <div class="form-group">
+                        <label for="role">Role</label>
+                        <select id="role">
+                            <option value="">Select a role</option>
+                            <option value="MANAGER">Manager</option>
+                            <option value="EMPLOYEE">Employee</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="createMsg" class="msg" style="display:none"></div>
+                <button class="btn-primary" onclick="handleCreateUser()">
+                    Create User
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="tab-panel" id="tab-assignManager">
+        <div class="card">
+            <div class="card-header">
+                <h3>Assign Manager to Employee</h3>
+            </div>
+            <div class="card-body">
+                <div class="grid-two">
+                    <div class="form-group">
+                        <label for="employeeSelect">Employee</label>
+                        <select id="employeeSelect">
+                            <option value="">-- Select Employee --</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="managerSelect">Manager</label>
+                        <select id="managerSelect">
+                            <option value="">-- Select Manager --</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="assignMsg" class="msg" style="display:none"></div>
+                <button class="btn-primary" onclick="handleAssignManager()">
+                    Assign Manager
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="tab-panel" id="tab-adminClaims">
+        <div class="card">
+            <div class="card-header">
+                <h3>Claims</h3>
+                <button class="btn-secondary"
+                        onclick="handleLoadAdminClaims()">
+                    Refresh
+                </button>
+            </div>
+            <div class="card-body">
+                <div id="adminClaimsMsg" class="msg" style="display:none"></div>
+                <div class="table-wrapper">
+                    <table id="adminClaimsTable" style="display:none">
+                        <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Employee</th>
+                            <th>Amount</th>
+                            <th>Date</th>
+                            <th>Description</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                        </thead>
+                        <tbody id="adminClaimsBody"></tbody>
+                    </table>
+                    <div id="adminClaimsEmpty" class="empty-state"
+                         style="display:none">
+                        <p>No claims found</p>
+                    </div>
+                </div>
+
+                <div id="adminActionSection" style="display:none;
+                     margin-top: 24px;">
+                    <div style="border-bottom: 1px solid #e2e8f0;
+                         padding-bottom: 12px; margin-bottom: 16px;">
+                        <h3 style="font-size: 16px; font-weight: 600;
+                            color: #2d3748;">Take Action</h3>
+                    </div>
+                    <div class="grid-two">
+                        <div class="form-group">
+                            <label for="adminClaimId">Claim ID</label>
+                            <input type="number" id="adminClaimId"
+                                   placeholder="Enter claim ID"
+                                   min="1" />
+                        </div>
+                        <div class="form-group">
+                            <label for="adminComment">Comment</label>
+                            <input type="text" id="adminComment"
+                                   placeholder="Add a comment (required)" />
+                        </div>
+                    </div>
+                    <div id="adminActionMsg" class="msg"
+                         style="display:none"></div>
+                    <div class="action-buttons">
+                        <button class="btn-approve"
+                                onclick="handleAdminApprove()">
+                            Approve Claim
+                        </button>
+                        <button class="btn-reject"
+                                onclick="handleAdminReject()">
+                            Reject Claim
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script src="js/utils.js"></script>
+<script src="js/api.js"></script>
+<script src="js/users.js"></script>
+<script>
+    function showTab(tabName) {
+        document.querySelectorAll('.tab-panel').forEach(function(p) {
+            p.classList.remove('active');
+        });
+        document.querySelectorAll('.tab-btn').forEach(function(b) {
+            b.classList.remove('active');
+        });
+        const panel = document.getElementById('tab-' + tabName);
+        const btn = document.getElementById('btn-' + tabName);
+        if (panel) { panel.classList.add('active'); }
+        if (btn) { btn.classList.add('active'); }
+    }
+</script>
+</body>
+</html>

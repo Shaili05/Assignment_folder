@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reimbursement Portal</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<script>
+    const role = localStorage.getItem('role');
+    if (!localStorage.getItem('userId')) {
+        window.location.href = 'login.html';
+    } else if (role === 'ADMIN') {
+        window.location.href = 'users.html';
+    } else if (role === 'MANAGER') {
+        window.location.href = 'reviewer.html';
+    } else {
+        window.location.href = 'claims.html';
+    }
+</script>
+</body>
+</html>
