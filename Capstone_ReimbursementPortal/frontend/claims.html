@@ -3,53 +3,89 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Claims</title>
+    <title>My Claims - Reimbursement Portal</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
-<header>
-    <h1>Reimbursement Portal</h1>
-    <nav>
-        <a href="index.html">Home</a>
-        <a href="claims.html">My Claims</a>
-    </nav>
+<header class="site-header">
+    <div class="header-left">
+        <div class="header-title">
+            <h1>Reimbursement Portal</h1>
+            <span class="header-subtitle">Employee Dashboard</span>
+        </div>
+    </div>
+    <div class="header-right">
+        <button class="btn-logout" onclick="logout()">Sign Out</button>
+    </div>
 </header>
 
 <div class="container">
 
-    <div class="card">
-        <h2>Submit a Claim</h2>
-        <input type="number" id="employeeId"
-               placeholder="Your Employee ID" min="1"/>
-        <input type="number" id="amount"
-               placeholder="Amount (e.g. 5000)" step="0.01" min="1"/>
-        <input type="date" id="date" />
-        <textarea id="description"
-                  placeholder="What was this expense for?"></textarea>
-        <button onclick="handleSubmitClaim()">Submit Claim</button>
-        <div id="submitMsg" class="msg" style="display:none"></div>
+    <div class="page-title">
+        <h2>My Claims</h2>
+        <p>Track your submissions and submit new reimbursement requests</p>
     </div>
 
     <div class="card">
-        <h2>My Previous Claims</h2>
-        <input type="number" id="viewEmployeeId"
-               placeholder="Your Employee ID" min="1"/>
-        <button onclick="handleViewClaims()">View My Claims</button>
-        <div id="claimsMsg" class="msg" style="display:none"></div>
-        <table id="claimsTable" style="display:none">
-            <thead>
-            <tr>
-                <th>ID</th>
-                <th>Amount</th>
-                <th>Date</th>
-                <th>Description</th>
-                <th>Status</th>
-                <th>Reviewer Comment</th>
-            </tr>
-            </thead>
-            <tbody id="claimsBody"></tbody>
-        </table>
+        <div class="card-header">
+            <h3>My Previous Claims</h3>
+            <button class="btn-secondary" onclick="handleViewClaims()">
+                Refresh
+            </button>
+        </div>
+        <div class="card-body">
+            <div id="claimsMsg" class="msg" style="display:none"></div>
+            <div class="table-wrapper">
+                <table id="claimsTable" style="display:none">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Amount</th>
+                        <th>Date</th>
+                        <th>Description</th>
+                        <th>Status</th>
+                        <th>Reviewer Comment</th>
+                    </tr>
+                    </thead>
+                    <tbody id="claimsBody"></tbody>
+                </table>
+                <div id="claimsEmpty" class="empty-state"
+                     style="display:none">
+                    <p>No claims submitted yet</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h3>Submit New Claim</h3>
+        </div>
+        <div class="card-body">
+            <div class="grid-two">
+                <div class="form-group">
+                    <label for="amount">Claim Amount (&#x20B9;)</label>
+                    <input type="number" id="amount"
+                           placeholder="Enter amount"
+                           step="0.01" min="1" />
+                </div>
+                <div class="form-group">
+                    <label for="date">Expense Date</label>
+                    <input type="date" id="date" />
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="description">Description</label>
+                <textarea id="description"
+                          placeholder="Describe the expense in detail">
+                </textarea>
+            </div>
+            <div id="submitMsg" class="msg" style="display:none"></div>
+            <button class="btn-primary" onclick="handleSubmitClaim()">
+                Submit Claim
+            </button>
+        </div>
     </div>
 
 </div>
@@ -57,6 +93,5 @@
 <script src="js/utils.js"></script>
 <script src="js/api.js"></script>
 <script src="js/claims.js"></script>
-
 </body>
 </html>

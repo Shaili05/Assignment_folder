@@ -10,31 +10,35 @@ import org.springframework.stereotype.Repository;
 
 /**
  * Repository interface for Claim entity database operations.
+ * Extends JpaRepository to inherit standard CRUD operations.
  */
 @Repository
 public interface ClaimRepository extends JpaRepository<Claim, Long> {
 
     /**
-     * Find all claims submitted by a specific employee with pagination.
-     * @param employee the employee user
-     * @param pageable pagination information
-     * @return paginated list of claims
+     * Finds all claims submitted by a specific employee with pagination.
+     *
+     * @param employee the employee whose claims to retrieve
+     * @param pageable pagination configuration
+     * @return paginated list of claims for the employee
      */
     Page<Claim> findByEmployee(User employee, Pageable pageable);
 
     /**
-     * Find all claims assigned to a specific reviewer with pagination.
-     * @param reviewer the reviewer user
-     * @param pageable pagination information
-     * @return paginated list of claims
+     * Finds all claims assigned to a specific reviewer with pagination.
+     *
+     * @param reviewer the reviewer whose assigned claims to retrieve
+     * @param pageable pagination configuration
+     * @return paginated list of claims assigned to the reviewer
      */
     Page<Claim> findByReviewer(User reviewer, Pageable pageable);
 
     /**
-     * Find all claims with a specific status with pagination.
-     * @param status the claim status
-     * @param pageable pagination information
-     * @return paginated list of claims
+     * Finds all claims with a specific status with pagination.
+     *
+     * @param status the claim status to filter by
+     * @param pageable pagination configuration
+     * @return paginated list of claims with the given status
      */
     Page<Claim> findByStatus(ClaimStatus status, Pageable pageable);
 }

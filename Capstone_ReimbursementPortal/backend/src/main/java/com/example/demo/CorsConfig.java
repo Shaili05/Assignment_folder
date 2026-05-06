@@ -6,25 +6,32 @@ import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 /**
- * Allows frontend HTML files to call backend APIs.
- * Without this the browser blocks all requests.
+ * CORS configuration for the reimbursement portal.
+ * Allows the frontend HTML pages to communicate with backend APIs
+ * by permitting cross-origin requests.
  */
 @Configuration
 public class CorsConfig {
 
     /**
-     * Opens up CORS so our frontend can talk to the backend.
+     * Registers CORS mappings to allow frontend API access.
      *
-     * @return WebMvcConfigurer with CORS settings
+     * @return WebMvcConfigurer with CORS rules applied
      */
     @Bean
     public WebMvcConfigurer corsConfigurer() {
         return new WebMvcConfigurer() {
+            /**
+             * Configures allowed origins, methods and headers.
+             *
+             * @param registry the CORS registry to configure
+             */
             @Override
             public void addCorsMappings(final CorsRegistry registry) {
                 registry.addMapping("/api/**")
                         .allowedOrigins("*")
-                        .allowedMethods("GET", "POST", "PUT", "DELETE")
+                        .allowedMethods(
+                                "GET", "POST", "PUT", "DELETE")
                         .allowedHeaders("*");
             }
         };

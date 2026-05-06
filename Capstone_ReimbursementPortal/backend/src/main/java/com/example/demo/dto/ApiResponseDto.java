@@ -2,42 +2,44 @@ package com.example.demo.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.Instant;
 
 /**
- * Wrapper for all API responses in the system.
- * Every endpoint returns this same structure so frontend
- * always knows what to expect.
+ * Standard wrapper for all API responses in the system.
+ * Every endpoint returns this same structure so the frontend
+ * always knows what fields to expect.
  *
- * @param <T> type of data being returned
+ * @param <T> type of data payload being returned
  */
-@Data
+@Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class ApiResponseDto<T> {
 
-    /** Either "success" or "error". */
+    /** Response status, either success or error. */
     private String status;
 
-    /** Short message about what happened. */
+    /** Short human readable message describing the outcome. */
     private String message;
 
-    /** Actual data, can be anything depending on the endpoint. */
+    /** Actual response payload, varies by endpoint. */
     private T data;
 
-    /** When this response was created. */
+    /** Timestamp of when this response was generated. */
     private Instant timestamp;
 
     /**
-     * Quick way to return success with data.
+     * Creates a success response with data and default message.
      *
      * @param <T> data type
-     * @param data the data to return
-     * @return success response
+     * @param data the payload to return
+     * @return success response wrapper
      */
     public static <T> ApiResponseDto<T> success(final T data) {
         return ApiResponseDto.<T>builder()
@@ -49,12 +51,12 @@ public class ApiResponseDto<T> {
     }
 
     /**
-     * Success response with a custom message.
+     * Creates a success response with data and custom message.
      *
      * @param <T> data type
-     * @param data the data to return
-     * @param msg custom message to show
-     * @return success response
+     * @param data the payload to return
+     * @param msg custom message describing the outcome
+     * @return success response wrapper
      */
     public static <T> ApiResponseDto<T> success(
             final T data, final String msg) {
@@ -67,11 +69,11 @@ public class ApiResponseDto<T> {
     }
 
     /**
-     * Used when something goes wrong.
+     * Creates an error response with an error message.
      *
      * @param <T> data type
-     * @param msg error message
-     * @return error response
+     * @param msg error message describing what went wrong
+     * @return error response wrapper
      */
     public static <T> ApiResponseDto<T> error(final String msg) {
         return ApiResponseDto.<T>builder()

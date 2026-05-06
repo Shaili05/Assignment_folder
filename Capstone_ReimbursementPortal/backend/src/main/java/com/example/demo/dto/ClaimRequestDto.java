@@ -12,8 +12,8 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 /**
- * Request DTO received when an employee submits a claim.
- * Validations ensure invalid data is rejected before processing.
+ * Request DTO received when an employee submits a reimbursement claim.
+ * Validation annotations ensure invalid data is rejected before processing.
  */
 @Getter
 @Setter
@@ -21,12 +21,12 @@ import java.time.LocalDate;
 @AllArgsConstructor
 public class ClaimRequestDto {
 
-    /** Amount must be provided and greater than 0. */
+    /** Claim amount, must be greater than zero. */
     @NotNull(message = "Amount is required")
     @DecimalMin(value = "0.01", message = "Amount must be greater than 0")
     private BigDecimal amount;
 
-    /** Date when the expense occurred. */
+    /** Date when the expense was incurred. */
     @NotNull(message = "Date is required")
     private LocalDate date;
 

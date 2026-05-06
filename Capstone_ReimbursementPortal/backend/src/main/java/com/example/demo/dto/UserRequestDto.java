@@ -5,25 +5,28 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 /**
- * This is what the API receives when creating a user.
- * Added validation here so bad data gets rejected early.
+ * Request DTO received when creating a new user.
+ * Validation annotations ensure all fields meet requirements
+ * before any business logic is executed.
  */
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserRequestDto {
 
-    /** Name can't be empty. */
+    /** Full name of the user, cannot be blank. */
     @NotBlank(message = "Name is required")
     private String name;
 
     /**
-     * Email must be from @company.com domain only.
-     * I used a regex pattern to enforce this.
+     * Company email address of the user.
+     * Must follow the company domain format.
      */
     @NotBlank(message = "Email is required")
     @Email(message = "Invalid email format")
@@ -34,14 +37,14 @@ public class UserRequestDto {
     private String email;
 
     /**
-     * Password will be encrypted before saving.
-     * Minimum 8 characters required.
+     * Password for the user account.
+     * Will be encrypted using BCrypt before storage.
      */
     @NotBlank(message = "Password is required")
     @Size(min = 8, message = "Password must be at least 8 characters")
     private String password;
 
-    /** Role should be ADMIN, MANAGER or EMPLOYEE. */
+    /** Role assigned to the user, must be ADMIN, MANAGER or EMPLOYEE. */
     @NotBlank(message = "Role is required")
     private String role;
 }

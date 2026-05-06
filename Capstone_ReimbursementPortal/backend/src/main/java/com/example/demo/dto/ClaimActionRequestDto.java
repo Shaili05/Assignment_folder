@@ -1,21 +1,23 @@
 package com.example.demo.dto;
 
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 /**
- * Used when a reviewer approves or rejects a claim.
- * Comment is optional for approval but required for rejection.
+ * Request DTO used when a reviewer approves or rejects a claim.
+ * Comment is mandatory for rejection and optional for approval.
  */
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class ClaimActionRequestDto {
 
-    /** Reviewer ID who is taking action on the claim. */
+    /** ID of the reviewer taking action on the claim. */
     private Long reviewerId;
 
-    /** Optional comment explaining the decision. */
+    /** Comment explaining the approval or rejection decision. */
     private String comment;
 }

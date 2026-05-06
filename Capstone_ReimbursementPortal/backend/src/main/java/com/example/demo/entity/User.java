@@ -12,45 +12,48 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 /**
- * User entity - maps to the users table in database.
- * Can be ADMIN, MANAGER or EMPLOYEE depending on the role.
+ * User entity mapped to the users table in the database.
+ * Supports three roles - ADMIN, MANAGER, and EMPLOYEE.
+ * An employee can have one manager assigned by the admin.
  */
 @Entity
 @Table(name = "users")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class User {
 
-    /** Auto generated primary key. */
+    /** Auto generated primary key for the user. */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    /** Name of the user. */
+    /** Full name of the user. */
     @Column(nullable = false)
     private String name;
 
-    /** Email must be unique across all users. */
+    /** Unique email address used for login and identification. */
     @Column(nullable = false, unique = true)
     private String email;
 
-    /** Stored as BCrypt hash, never plain text. */
+    /** BCrypt hashed password, never stored as plain text. */
     @Column(nullable = false)
     private String password;
 
-    /** Role decides what the user can do in the system. */
+    /** Role assigned to this user, determines system access. */
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Role role;
 
     /**
-     * Manager assigned to this user.
-     * Will be null for admins and managers.
+     * Manager assigned to this employee.
+     * Null for admin and manager role users.
      */
     @ManyToOne
     @JoinColumn(name = "manager_id")

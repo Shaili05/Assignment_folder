@@ -7,66 +7,17 @@
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-
-<header>
-    <h1>Reimbursement Portal</h1>
-</header>
-
-<div class="home-container">
-    <div class="card">
-        <h2>Welcome</h2>
-        <p style="margin-bottom: 20px; color: #666; font-size: 14px;">
-            Select your role to continue
-        </p>
-
-        <select id="roleSelect">
-            <option value="">-- Select Role --</option>
-            <option value="ADMIN">Admin</option>
-            <option value="MANAGER">Manager</option>
-            <option value="EMPLOYEE">Employee</option>
-        </select>
-
-        <input type="number" id="userId"
-               placeholder="Enter your User ID" min="1" />
-
-        <button onclick="goToDashboard()">Continue</button>
-
-        <div id="msg" class="msg" style="display:none"></div>
-    </div>
-</div>
-
-<script src="js/utils.js"></script>
 <script>
-    function goToDashboard() {
-        const role = document.getElementById('roleSelect').value;
-        const userId = parseInt(
-            document.getElementById('userId').value
-        );
-
-        if (!role) {
-            showMessage('msg', 'Please select a role', true);
-            return;
-        }
-
-        if (!userId || userId <= 0) {
-            showMessage('msg',
-                'Please enter a valid User ID (must be greater than 0)',
-                true);
-            return;
-        }
-
-        localStorage.setItem('userId', userId);
-        localStorage.setItem('role', role);
-
-        if (role === 'ADMIN') {
-            window.location.href = 'users.html';
-        } else if (role === 'MANAGER') {
-            window.location.href = 'reviewer.html';
-        } else {
-            window.location.href = 'claims.html';
-        }
+    const role = localStorage.getItem('role');
+    if (!localStorage.getItem('userId')) {
+        window.location.href = 'login.html';
+    } else if (role === 'ADMIN') {
+        window.location.href = 'users.html';
+    } else if (role === 'MANAGER') {
+        window.location.href = 'reviewer.html';
+    } else {
+        window.location.href = 'claims.html';
     }
 </script>
-
 </body>
 </html>

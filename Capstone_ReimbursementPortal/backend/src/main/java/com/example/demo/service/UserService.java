@@ -6,44 +6,40 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 /**
- * Service interface defining all User related operations.
- * Having an interface separates the contract from implementation,
- * making it easy to swap implementations or write tests.
+ * Interface for user operations.
+ * Defines what methods UserServiceImpl must implement.
  */
 public interface UserService {
 
     /**
      * Creates a new user in the system.
-     * Password will be encrypted before saving.
      *
-     * @param dto the user details from the request
-     * @return the created user details (without password)
+     * @param dto incoming request with user details
+     * @return saved user details without password
      */
     UserResponseDto createUser(UserRequestDto dto);
 
     /**
-     * Removes a user from the system permanently.
+     * Deletes a user by their ID.
      *
-     * @param id the unique ID of the user to delete
+     * @param id the user ID to delete
      */
     void deleteUser(Long id);
 
     /**
-     * Retrieves all users with pagination support.
-     * Pagination prevents loading thousands of records at once.
+     * Returns all users with pagination support.
      *
-     * @param pageable contains page number and page size
-     * @return one page of user records
+     * @param pageable page number and size
+     * @return one page of users
      */
     Page<UserResponseDto> getAllUsers(Pageable pageable);
 
     /**
-     * Links an employee to their manager.
-     * The manager must have MANAGER or ADMIN role.
+     * Assigns a manager to an employee.
      *
-     * @param employeeId the ID of the employee
-     * @param managerId the ID of the manager
-     * @return updated employee details showing their manager
+     * @param employeeId employee who needs a manager
+     * @param managerId manager being assigned
+     * @return updated employee details
      */
     UserResponseDto assignManager(Long employeeId, Long managerId);
 }

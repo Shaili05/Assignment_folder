@@ -23,33 +23,34 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Controller for user related APIs.
- * All requests come here first, then I pass them to the service.
+ * REST controller for user management operations.
  */
 @RestController
 @RequestMapping("/api/users")
 @RequiredArgsConstructor
 public class UserController {
 
-    /** Using this to log which API got called. */
-    private static final Logger logger =
+    /** Logger for tracking requests. */
+    private static final Logger LOGGER =
             LoggerFactory.getLogger(UserController.class);
 
-    /** Service does the actual work, controller just receives requests. */
+    /** Service layer for user business logic. */
     private final UserService userService;
 
     /**
-     * Creates a new user.
-     * @Valid checks the request body before it even reaches here.
+     * POST /api/users - Creates a new user.
      *
      * @param dto request body with user details
-     * @return 201 with the created user
+     * @return 201 with created user
      */
     @PostMapping
     public ResponseEntity<ApiResponseDto<UserResponseDto>> createUser(
             @Valid @RequestBody final UserRequestDto dto) {
-        logger.info("POST /api/users called for email: {}", dto.getEmail());
-        UserResponseDto response = userService.createUser(dto);
+        LOGGER.info("Request received - POST /api/users for: {}",
+                dto.getEmail());
+        final UserResponseDto response = userService.createUser(dto);
+        LOGGER.info("Request completed - User created ID: {}",
+                response.getId());
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(ApiResponseDto.success(response,
@@ -57,54 +58,60 @@ public class UserController {
     }
 
     /**
-     * Deletes a user by ID.
+     * DELETE /api/users/{id} - Deletes a user.
      *
-     * @param id user ID from the URL
-     * @return 200 if deleted successfully
+     * @param id the user ID to delete
+     * @return 200 confirming deletion
      */
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponseDto<Void>> deleteUser(
             @PathVariable final Long id) {
-        logger.info("DELETE /api/users/{} called", id);
+        LOGGER.info("Request received - DELETE /api/users/{}", id);
         userService.deleteUser(id);
+        LOGGER.info("Request completed - User deleted ID: {}", id);
         return ResponseEntity.ok(
-                ApiResponseDto.success(null, "User deleted successfully"));
+                ApiResponseDto.success(null,
+                        "User deleted successfully"));
     }
 
     /**
-     * Returns all users, paginated.
-     * Default page is 0 and default size is 10.
+     * GET /api/users - Returns all non-admin users paginated.
      *
-     * @param page which page to fetch
-     * @param size how many records per page
-     * @return list of users for that page
+     * @param page page number, defaults to 0
+     * @param size records per page, defaults to 10
+     * @return paginated user list
      */
     @GetMapping
-    public ResponseEntity<ApiResponseDto<Page<UserResponseDto>>> getAllUsers(
+    public ResponseEntity<ApiResponseDto<Page<UserResponseDto>>>
+    getAllUsers(
             @RequestParam(defaultValue = "0") final int page,
             @RequestParam(defaultValue = "10") final int size) {
-        logger.info("GET /api/users called - page={}, size={}", page, size);
-        Page<UserResponseDto> users =
+        LOGGER.info("Request received - GET /api/users page={}, size={}",
+                page, size);
+        final Page<UserResponseDto> users =
                 userService.getAllUsers(PageRequest.of(page, size));
+        LOGGER.info("Request completed - Returned {} users",
+                users.getTotalElements());
         return ResponseEntity.ok(ApiResponseDto.success(users));
     }
 
     /**
-     * Assigns a manager to an employee.
-     * Both IDs come from the URL path.
+     * PUT /api/users/{employeeId}/assign-manager/{managerId}
      *
-     * @param employeeId employee who needs a manager
-     * @param managerId manager being assigned
+     * @param employeeId employee to update
+     * @param managerId manager to assign
      * @return updated employee details
      */
     @PutMapping("/{employeeId}/assign-manager/{managerId}")
     public ResponseEntity<ApiResponseDto<UserResponseDto>> assignManager(
             @PathVariable final Long employeeId,
             @PathVariable final Long managerId) {
-        logger.info("PUT assign-manager called - employee: {}, manager: {}",
-                employeeId, managerId);
-        UserResponseDto response =
+        LOGGER.info("Request received - assign-manager "
+                + "employee:{} manager:{}", employeeId, managerId);
+        final UserResponseDto response =
                 userService.assignManager(employeeId, managerId);
+        LOGGER.info("Request completed - Manager assigned to: {}",
+                employeeId);
         return ResponseEntity.ok(
                 ApiResponseDto.success(response,
                         "Manager assigned successfully"));

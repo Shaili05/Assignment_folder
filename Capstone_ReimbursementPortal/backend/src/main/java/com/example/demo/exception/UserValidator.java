@@ -9,64 +9,57 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 /**
- * Handles validation before any user operation.
- * I kept this separate from the service so it stays clean.
+ * Validates business rules before processing user operations.
  */
 @Component
 @RequiredArgsConstructor
 public class UserValidator {
 
-    /** To log what validation is happening. */
-    private static final Logger logger =
+    /** Logger for tracking validation operations. */
+    private static final Logger LOGGER =
             LoggerFactory.getLogger(UserValidator.class);
 
-    /** Need this to check if email or ID already exists in db. */
+    /** Repository used to check email and ID existence. */
     private final UserRepository userRepository;
 
     /**
-     * Checks if we can create a new user.
-     * Email should not already exist, and role should be valid.
+     * Validates a user creation request.
+     * Checks email is not taken and role is valid.
      *
-     * @param dto the create user request
-     * @throws IllegalArgumentException if email taken or role wrong
+     * @param dto the create user request to validate
      */
     public void validateCreateUser(final UserRequestDto dto) {
-        logger.debug("Validating new user with email: {}", dto.getEmail());
+        LOGGER.debug("Validating user creation for email: {}",
+                dto.getEmail());
 
         if (userRepository.existsByEmail(dto.getEmail())) {
-            logger.warn("Email already exists: {}", dto.getEmail());
+            LOGGER.warn("Duplicate email: {}", dto.getEmail());
             throw new IllegalArgumentException(
-                    "A user already exists with email: " + dto.getEmail());
+                    "A user already exists with email: "
+                            + dto.getEmail());
         }
 
         try {
             Role.valueOf(dto.getRole().toUpperCase());
-        } catch (IllegalArgumentException e) {
-            logger.warn("Invalid role given: {}", dto.getRole());
+        } catch (IllegalArgumentException ex) {
+            LOGGER.warn("Invalid role: {}", dto.getRole());
             throw new IllegalArgumentException(
                     "Invalid role: " + dto.getRole()
-                            + ". Allowed values are ADMIN, MANAGER, EMPLOYEE");
+                            + ". Allowed: MANAGER, EMPLOYEE");
         }
-
-        logger.debug("Validation passed for: {}", dto.getEmail());
     }
 
     /**
-     * Checks if a user with given ID exists.
-     * Used before delete or assign manager operations.
+     * Validates that a user with the given ID exists.
      *
-     * @param id user ID to look up
-     * @throws ResourceNotFoundException if not found
+     * @param id the user ID to check
      */
     public void validateUserExists(final Long id) {
-        logger.debug("Checking if user exists, ID: {}", id);
-
+        LOGGER.debug("Checking existence of user ID: {}", id);
         if (!userRepository.existsById(id)) {
-            logger.warn("User not found with ID: {}", id);
+            LOGGER.warn("User not found with ID: {}", id);
             throw new ResourceNotFoundException(
                     "No user found with ID: " + id);
         }
-
-        logger.debug("User found with ID: {}", id);
     }
 }

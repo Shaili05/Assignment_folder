@@ -7,55 +7,55 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 /**
- * Interface for claim operations.
- * Defines what methods ClaimServiceImpl must implement.
+ * Interface defining the contract for claim business operations.
+ * Implemented by ClaimServiceImpl.
  */
 public interface ClaimService {
 
     /**
-     * Submit a new claim.
+     * Submits a new reimbursement claim for an employee.
      *
-     * @param dto claim details from request
-     * @return saved claim details
+     * @param dto claim details from the request
+     * @return saved claim details as response DTO
      */
     ClaimResponseDto submitClaim(ClaimRequestDto dto);
 
     /**
-     * Get all claims submitted by one employee.
+     * Retrieves all claims submitted by a specific employee.
      *
-     * @param employeeId the employee ID
-     * @param pageable page and size
-     * @return paginated list of claims
+     * @param employeeId the ID of the employee
+     * @param pageable page number and size configuration
+     * @return paginated list of employee claims
      */
     Page<ClaimResponseDto> getClaimsByEmployee(
             Long employeeId, Pageable pageable);
 
     /**
-     * Approve a claim.
+     * Approves a submitted claim.
      *
-     * @param claimId the claim to approve
-     * @param dto reviewer details and optional comment
-     * @return updated claim
+     * @param claimId the ID of the claim to approve
+     * @param dto reviewer ID and optional comment
+     * @return updated claim with approved status
      */
     ClaimResponseDto approveClaim(
             Long claimId, ClaimActionRequestDto dto);
 
     /**
-     * Reject a claim.
+     * Rejects a submitted claim.
      *
-     * @param claimId the claim to reject
-     * @param dto reviewer details and comment
-     * @return updated claim
+     * @param claimId the ID of the claim to reject
+     * @param dto reviewer ID and rejection comment
+     * @return updated claim with rejected status
      */
     ClaimResponseDto rejectClaim(
             Long claimId, ClaimActionRequestDto dto);
 
     /**
-     * Get all claims assigned to a reviewer.
+     * Retrieves all claims assigned to a specific reviewer.
      *
-     * @param reviewerId the reviewer ID
-     * @param pageable page and size
-     * @return paginated list of claims
+     * @param reviewerId the ID of the reviewer
+     * @param pageable page number and size configuration
+     * @return paginated list of claims assigned to reviewer
      */
     Page<ClaimResponseDto> getClaimsByReviewer(
             Long reviewerId, Pageable pageable);

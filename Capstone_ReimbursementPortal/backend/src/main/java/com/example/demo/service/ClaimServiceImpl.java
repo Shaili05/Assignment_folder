@@ -9,6 +9,7 @@ import com.example.demo.enums.ClaimStatus;
 import com.example.demo.enums.Role;
 import com.example.demo.exception.ClaimValidator;
 import com.example.demo.exception.ResourceNotFoundException;
+import com.example.demo.mapper.ClaimMapper;
 import com.example.demo.repository.ClaimRepository;
 import com.example.demo.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -19,198 +20,195 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 /**
- * Business logic for claim operations.
- * Validator is always called before touching the database.
+ * Service implementation for claim related business operations.
+ * Handles submission, retrieval, approval and rejection of claims.
  */
 @Service
 @RequiredArgsConstructor
 public class ClaimServiceImpl implements ClaimService {
 
-    /** Logger for tracking what happens in each method. */
-    private static final Logger logger =
+    /** Logger for tracking service operations. */
+    private static final Logger LOGGER =
             LoggerFactory.getLogger(ClaimServiceImpl.class);
 
-    /** Database operations for claims. */
+    /** Repository for claim database operations. */
     private final ClaimRepository claimRepository;
 
-    /** Database operations for users. */
+    /** Repository for user database operations. */
     private final UserRepository userRepository;
 
-    /** Validates business rules before processing. */
+    /** Validator for claim business rules. */
     private final ClaimValidator claimValidator;
+
+    /** Mapper for converting Claim entity to response DTO. */
+    private final ClaimMapper claimMapper;
 
     /**
      * Submits a new claim for an employee.
      * Auto assigns reviewer based on whether employee has a manager.
+     * Falls back to admin if no manager is assigned.
      *
-     * @param dto claim details from request
-     * @return saved claim response
+     * @param dto claim details from the request
+     * @return saved claim as response DTO
      */
     @Override
     public ClaimResponseDto submitClaim(final ClaimRequestDto dto) {
-        logger.info("Submitting claim for employee ID: {}",
+        LOGGER.info("Submitting claim for employee ID: {}",
                 dto.getEmployeeId());
-
         claimValidator.validateCreateClaim(dto);
-
-        User employee = userRepository.findById(dto.getEmployeeId())
+        final User employee = userRepository.findById(dto.getEmployeeId())
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Employee not found with ID: "
                                 + dto.getEmployeeId()));
-
-        User reviewer = employee.getManager();
-        if (reviewer == null) {
-            reviewer = userRepository.findAll()
-                    .stream()
-                    .filter(u -> u.getRole() == Role.ADMIN)
-                    .findFirst()
-                    .orElseThrow(() -> new ResourceNotFoundException(
-                            "No admin found to assign as reviewer"));
-        }
-
-        Claim claim = new Claim();
+        final User reviewer = resolveReviewer(employee);
+        final Claim claim = new Claim();
         claim.setAmount(dto.getAmount());
         claim.setDate(dto.getDate());
         claim.setDescription(dto.getDescription());
         claim.setEmployee(employee);
         claim.setReviewer(reviewer);
         claim.setStatus(ClaimStatus.SUBMITTED);
-
-        Claim saved = claimRepository.save(claim);
-        logger.info("Claim saved with ID: {}", saved.getId());
-
-        return mapToResponse(saved);
+        final Claim saved = claimRepository.save(claim);
+        LOGGER.info("Claim saved with ID: {}", saved.getId());
+        return claimMapper.toResponseDto(saved);
     }
 
     /**
-     * Gets all claims submitted by a specific employee.
+     * Retrieves all claims submitted by a specific employee.
      *
-     * @param employeeId the employee ID
-     * @param pageable page and size
-     * @return paginated claims
+     * @param employeeId the ID of the employee
+     * @param pageable page and size configuration
+     * @return paginated list of claims
      */
     @Override
     public Page<ClaimResponseDto> getClaimsByEmployee(
             final Long employeeId, final Pageable pageable) {
-        logger.info("Fetching claims for employee ID: {}", employeeId);
-
-        User employee = userRepository.findById(employeeId)
+        LOGGER.info("Fetching claims for employee ID: {}", employeeId);
+        final User employee = userRepository.findById(employeeId)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Employee not found with ID: " + employeeId));
-
         return claimRepository.findByEmployee(employee, pageable)
-                .map(this::mapToResponse);
+                .map(claimMapper::toResponseDto);
     }
 
     /**
-     * Approves a claim.
+     * Approves a submitted claim.
      * Only the assigned reviewer can approve it.
+     * Comment is optional for approval.
      *
-     * @param claimId claim to approve
+     * @param claimId ID of the claim to approve
      * @param dto reviewer ID and optional comment
-     * @return updated claim
+     * @return updated claim with approved status
      */
     @Override
     public ClaimResponseDto approveClaim(
             final Long claimId,
             final ClaimActionRequestDto dto) {
-        logger.info("Approving claim ID: {}", claimId);
-
-        Claim claim = claimRepository.findById(claimId)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Claim not found with ID: " + claimId));
-
-        if (claim.getStatus() != ClaimStatus.SUBMITTED) {
-            throw new IllegalArgumentException(
-                    "Only SUBMITTED claims can be approved");
-        }
-
-        if (!claim.getReviewer().getId().equals(dto.getReviewerId())) {
-            throw new IllegalArgumentException(
-                    "You are not assigned to review this claim");
-        }
-
+        LOGGER.info("Approving claim ID: {}", claimId);
+        final Claim claim = findSubmittedClaim(claimId);
+        validateReviewer(claim, dto.getReviewerId());
         claim.setStatus(ClaimStatus.APPROVED);
-        claim.setReviewerComment(dto.getComment());
-        Claim updated = claimRepository.save(claim);
-        logger.info("Claim ID: {} approved", claimId);
-
-        return mapToResponse(updated);
+        if (dto.getComment() != null
+                && !dto.getComment().trim().isEmpty()) {
+            claim.setReviewerComment(dto.getComment().trim());
+        }
+        final Claim updated = claimRepository.save(claim);
+        LOGGER.info("Claim ID: {} approved successfully", claimId);
+        return claimMapper.toResponseDto(updated);
     }
 
     /**
-     * Rejects a claim.
+     * Rejects a submitted claim.
      * Only the assigned reviewer can reject it.
+     * Comment is mandatory for rejection.
      *
-     * @param claimId claim to reject
-     * @param dto reviewer ID and comment
-     * @return updated claim
+     * @param claimId ID of the claim to reject
+     * @param dto reviewer ID and rejection comment
+     * @return updated claim with rejected status
      */
     @Override
     public ClaimResponseDto rejectClaim(
             final Long claimId,
             final ClaimActionRequestDto dto) {
-        logger.info("Rejecting claim ID: {}", claimId);
-
-        Claim claim = claimRepository.findById(claimId)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Claim not found with ID: " + claimId));
-
-        if (claim.getStatus() != ClaimStatus.SUBMITTED) {
+        LOGGER.info("Rejecting claim ID: {}", claimId);
+        final Claim claim = findSubmittedClaim(claimId);
+        validateReviewer(claim, dto.getReviewerId());
+        if (dto.getComment() == null
+                || dto.getComment().trim().isEmpty()) {
             throw new IllegalArgumentException(
-                    "Only SUBMITTED claims can be rejected");
+                    "Comment is required when rejecting a claim");
         }
-
-        if (!claim.getReviewer().getId().equals(dto.getReviewerId())) {
-            throw new IllegalArgumentException(
-                    "You are not assigned to review this claim");
-        }
-
         claim.setStatus(ClaimStatus.REJECTED);
-        claim.setReviewerComment(dto.getComment());
-        Claim updated = claimRepository.save(claim);
-        logger.info("Claim ID: {} rejected", claimId);
-
-        return mapToResponse(updated);
+        claim.setReviewerComment(dto.getComment().trim());
+        final Claim updated = claimRepository.save(claim);
+        LOGGER.info("Claim ID: {} rejected successfully", claimId);
+        return claimMapper.toResponseDto(updated);
     }
 
     /**
-     * Gets all claims assigned to a reviewer.
+     * Retrieves all claims assigned to a specific reviewer.
      *
-     * @param reviewerId the reviewer ID
-     * @param pageable page and size
-     * @return paginated claims
+     * @param reviewerId the ID of the reviewer
+     * @param pageable page and size configuration
+     * @return paginated list of assigned claims
      */
     @Override
     public Page<ClaimResponseDto> getClaimsByReviewer(
             final Long reviewerId, final Pageable pageable) {
-        logger.info("Fetching claims for reviewer ID: {}", reviewerId);
-
-        User reviewer = userRepository.findById(reviewerId)
+        LOGGER.info("Fetching claims for reviewer ID: {}", reviewerId);
+        final User reviewer = userRepository.findById(reviewerId)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Reviewer not found with ID: " + reviewerId));
-
         return claimRepository.findByReviewer(reviewer, pageable)
-                .map(this::mapToResponse);
+                .map(claimMapper::toResponseDto);
     }
 
     /**
-     * Converts Claim entity to ClaimResponseDto.
-     * Never return entity directly to avoid exposing DB fields.
+     * Resolves the reviewer for a claim.
+     * Uses employee manager if assigned otherwise finds first admin.
      *
-     * @param claim the claim entity
-     * @return response DTO
+     * @param employee the employee submitting the claim
+     * @return the resolved reviewer user
      */
-    private ClaimResponseDto mapToResponse(final Claim claim) {
-        return ClaimResponseDto.builder()
-                .id(claim.getId())
-                .amount(claim.getAmount())
-                .date(claim.getDate())
-                .description(claim.getDescription())
-                .status(claim.getStatus())
-                .reviewerComment(claim.getReviewerComment())
-                .employeeName(claim.getEmployee().getName())
-                .reviewerName(claim.getReviewer().getName())
-                .build();
+    private User resolveReviewer(final User employee) {
+        if (employee.getManager() != null) {
+            return employee.getManager();
+        }
+        return userRepository.findByRole(Role.ADMIN)
+                .stream()
+                .findFirst()
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "No admin found to assign as reviewer"));
+    }
+
+    /**
+     * Finds a claim by ID and validates it is in SUBMITTED status.
+     *
+     * @param claimId the ID of the claim to find
+     * @return the claim entity if found and in SUBMITTED status
+     */
+    private Claim findSubmittedClaim(final Long claimId) {
+        final Claim claim = claimRepository.findById(claimId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Claim not found with ID: " + claimId));
+        if (claim.getStatus() != ClaimStatus.SUBMITTED) {
+            throw new IllegalArgumentException(
+                    "Only SUBMITTED claims can be actioned");
+        }
+        return claim;
+    }
+
+    /**
+     * Validates that the given reviewer is assigned to the claim.
+     *
+     * @param claim the claim being actioned
+     * @param reviewerId the ID of the reviewer attempting the action
+     */
+    private void validateReviewer(
+            final Claim claim, final Long reviewerId) {
+        if (!claim.getReviewer().getId().equals(reviewerId)) {
+            throw new IllegalArgumentException(
+                    "You are not assigned to review this claim");
+        }
     }
 }
