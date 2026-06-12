@@ -7,7 +7,7 @@ Questions: Q17 to Q24
 import math
 import random
 
-from my_module import (
+from python_basic.collections.my_module import (
     add_two_numbers,
     is_even,
     celsius_to_fahrenheit
