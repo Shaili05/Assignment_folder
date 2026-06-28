@@ -33,3 +33,21 @@ def get_user_by_email(email: str):
     user = users_collection.find_one({"email": email})
     if user:
         return
+    
+def login_user(email: str, password: str):
+    """Login user and return JWT token"""
+    user = users_collection.find_one({"email": email})
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid email or password")
+    
+    if not verify_password(password, user["password"]):
+        raise HTTPException(status_code=401, detail="Invalid email or password")
+    
+    from utils.auth import create_token
+    token = create_token({
+        "user_id": str(user["_id"]),
+        "email": user["email"],
+        "role": user["role"]
+    })
+    
+    return {"access_token": token, "token_type": "bearer"}

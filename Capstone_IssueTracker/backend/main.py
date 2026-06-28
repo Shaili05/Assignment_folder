@@ -18,6 +18,8 @@ app.add_middleware(
 
 # Include routers
 app.include_router(users.router)
+from routers import projects
+app.include_router(projects.router)
 
 @app.get("/")
 def health_check():
