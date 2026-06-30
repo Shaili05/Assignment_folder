@@ -1,19 +1,17 @@
-const BASE_URL = "http://localhost:8000/api"
+import { _get, _post } from "./api-manager"
 
 export async function registerUser(name, email, password) {
-  const response = await fetch(`${BASE_URL}/users/register`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ name, email, password })
-  })
-  return response.json()
+  return _post("/users/register", { name, email, password })
 }
 
 export async function loginUser(email, password) {
-  const response = await fetch(`${BASE_URL}/users/login`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password })
-  })
-  return response.json()
+  return _post("/users/login", { email, password })
+}
+
+export async function getProjects(token) {
+  return _get("/projects/", token)
+}
+
+export async function createProject(data, token) {
+  return _post("/projects/", data, token)
 }

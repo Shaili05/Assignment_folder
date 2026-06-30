@@ -1,111 +1,110 @@
 import { useState } from "react"
+import { Link } from "react-router-dom"
 import { registerUser } from "../services/api"
+import "./register-page.css"
 
-function RegisterPage({ onNavigate }) {
+function RegisterPage() {
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [errors, setErrors] = useState({})
   const [message, setMessage] = useState("")
 
+  function validate() {
+    const newErrors = {}
+
+    if (!name.trim()) {
+      newErrors.name = "Full name is required."
+    }
+
+    if (!email.trim()) {
+      newErrors.email = "Email is required."
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      newErrors.email = "Enter a valid email address."
+    }
+
+    if (!password) {
+      newErrors.password = "Password is required."
+    } else if (password.length < 6) {
+      newErrors.password = "Password must be at least 6 characters long."
+    } else if (!/[A-Z]/.test(password)) {
+      newErrors.password = "Password must contain one uppercase letter."
+    } else if (!/[a-z]/.test(password)) {
+      newErrors.password = "Password must contain one lowercase letter."
+    } else if (!/[0-9]/.test(password)) {
+      newErrors.password = "Password must contain one digit."
+    } else if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+      newErrors.password = "Password must contain one special character."
+    }
+
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
+
   async function handleRegister() {
-    const result = await registerUser(name, email, password)
-    if (result.id) {
+    setMessage("")
+    if (!validate()) return
+
+    try {
+      await registerUser(name, email, password)
       setMessage("Registration successful! Please login.")
-    } else {
-      setMessage(result.detail || "Registration failed")
+      setName("")
+      setEmail("")
+      setPassword("")
+    } catch (err) {
+      setMessage(err.message || "Registration failed")
     }
   }
 
   return (
-    <div style={styles.container}>
-      <div style={styles.card}>
-        <h2 style={styles.title}>Create Account</h2>
-        <input
-          style={styles.input}
-          type="text"
-          placeholder="Full Name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-        />
-        <input
-          style={styles.input}
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
-        <input
-          style={styles.input}
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
-        <button style={styles.button} onClick={handleRegister}>
-          Register
-        </button>
-        {message && <p style={styles.message}>{message}</p>}
-        <p style={styles.link}>
+    <div className="register-container">
+      <div className="register-card">
+        <h2 className="register-title">Create Account</h2>
+
+        <div>
+          <input
+            className={`register-input ${errors.name ? "register-input-error" : ""}`}
+            type="text"
+            placeholder="Full Name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
+          {errors.name && <p className="register-error-text">{errors.name}</p>}
+        </div>
+
+        <div>
+          <input
+            className={`register-input ${errors.email ? "register-input-error" : ""}`}
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+          {errors.email && <p className="register-error-text">{errors.email}</p>}
+        </div>
+
+        <div>
+          <input
+            className={`register-input ${errors.password ? "register-input-error" : ""}`}
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+          {errors.password && <p className="register-error-text">{errors.password}</p>}
+        </div>
+
+        <button className="register-button" onClick={handleRegister}>Register</button>
+
+        {message && <p className="register-message">{message}</p>}
+
+        <p className="register-link">
           Already have an account?{" "}
-          <span style={styles.linkText} onClick={() => onNavigate("login")}>
-            Login
-          </span>
+          <Link className="register-link-text" to="/login">Login</Link>
         </p>
       </div>
     </div>
   )
-}
-
-const styles = {
-  container: {
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    height: "100vh",
-    backgroundColor: "#f0f2f5"
-  },
-  card: {
-    backgroundColor: "#fff",
-    padding: "40px",
-    borderRadius: "8px",
-    boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
-    width: "360px",
-    display: "flex",
-    flexDirection: "column",
-    gap: "16px"
-  },
-  title: {
-    textAlign: "center",
-    color: "#333"
-  },
-  input: {
-    padding: "10px",
-    borderRadius: "4px",
-    border: "1px solid #ccc",
-    fontSize: "14px"
-  },
-  button: {
-    padding: "10px",
-    backgroundColor: "#4f46e5",
-    color: "#fff",
-    border: "none",
-    borderRadius: "4px",
-    fontSize: "16px",
-    cursor: "pointer"
-  },
-  message: {
-    textAlign: "center",
-    color: "green"
-  },
-  link: {
-    textAlign: "center",
-    fontSize: "14px"
-  },
-  linkText: {
-    color: "#4f46e5",
-    cursor: "pointer",
-    fontWeight: "bold"
-  }
 }
 
 export default RegisterPage
