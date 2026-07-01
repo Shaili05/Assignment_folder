@@ -1,0 +1,37 @@
+name: AI PR Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  trigger-pr-review:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Call PR Review API
+        run: |
+          echo "Triggering PR Review API"
+
+          response=$(curl -s -w "\n%{http_code}" --max-time 15 -X POST "${{ secrets.PR_REVIEW_URL }}" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer ${{ secrets.PR_REVIEW_AGENT_TOKEN }}" \
+            -d "{
+                  \"repo\": \"${{ github.repository }}\",
+                  \"pr_number\": ${{ github.event.pull_request.number }},
+                  \"commit_shas\": [\"${{ github.event.pull_request.head.sha }}\"],
+                  \"branch\": \"python/dev\",
+                  \"action\": \"${{ github.event.action }}\",
+                  \"github_token\": \"${{ secrets.PAT_TOKEN }}\"
+                }")
+
+          http_code=$(echo "$response" | tail -n1)
+          body=$(echo "$response" | sed '$d')
+
+          echo "Response: $body"
+          echo "Status: $http_code"
+
+          if ! [[ "$http_code" =~ ^[0-9]{3}$ ]] || [[ "$http_code" -lt 200 || "$http_code" -ge 300 ]]; then
+            echo "PR Review API call failed with status: ${http_code:-<no response>}"
+            exit 1
+          fi
