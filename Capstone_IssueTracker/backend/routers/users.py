@@ -28,7 +28,7 @@ def login(user: UserLogin):
 
 @router.get("/me")
 def get_me(current_user: dict = Depends(get_current_user)):
-    """Get current logged-in user info"""
+    """Get current logged-in user info - requires valid token"""
     return {
         "user_id": current_user.get("user_id"),
         "email": current_user.get("email"),
@@ -37,5 +37,5 @@ def get_me(current_user: dict = Depends(get_current_user)):
 
 @router.get("/admin-only")
 def admin_only(current_user: dict = Depends(require_admin)):
-    """Admin only endpoint"""
+    """Test endpoint - only admin can access this"""
     return {"message": f"Welcome Admin {current_user.get('email')}"}

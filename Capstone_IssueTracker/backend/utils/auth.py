@@ -25,3 +25,5 @@ def decode_token(token: str):
         return None
     except jwt.InvalidTokenError:
         return None
+    
+create_access_token = create_token
