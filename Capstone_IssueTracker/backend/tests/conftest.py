@@ -8,6 +8,7 @@ from main import app
 from database import users_collection, db
 
 projects_collection = db["projects"]
+issues_collection = db["issues"]
 
 @pytest.fixture
 def client():
@@ -15,11 +16,10 @@ def client():
 
 @pytest.fixture(autouse=True)
 def clean_db():
-    """Clean up test data before each test"""
-    # Clean all test users
     users_collection.delete_many({})
-    # Clean all test projects
     projects_collection.delete_many({})
+    issues_collection.delete_many({})
     yield
     users_collection.delete_many({})
     projects_collection.delete_many({})
+    issues_collection.delete_many({})
