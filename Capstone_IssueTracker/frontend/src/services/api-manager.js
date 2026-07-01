@@ -1,5 +1,9 @@
 const BASE_URL = import.meta.env.VITE_API_BASE_URL
 
+function getToken() {
+  return localStorage.getItem("token")
+}
+
 async function handleResponse(response) {
   const data = await response.json().catch(() => ({}))
   if (!response.ok) {
@@ -8,8 +12,11 @@ async function handleResponse(response) {
   return data
 }
 
-export async function _get(endpoint, token) {
-  const headers = token ? { Authorization: `Bearer ${token}` } : {}
+export async function _get(endpoint, requireAuth = false) {
+  const headers = {}
+  if (requireAuth) {
+    headers.Authorization = `Bearer ${getToken()}`
+  }
   const response = await fetch(`${BASE_URL}${endpoint}`, {
     method: "GET",
     headers
@@ -17,9 +24,11 @@ export async function _get(endpoint, token) {
   return handleResponse(response)
 }
 
-export async function _post(endpoint, body, token) {
+export async function _post(endpoint, body, requireAuth = false) {
   const headers = { "Content-Type": "application/json" }
-  if (token) headers.Authorization = `Bearer ${token}`
+  if (requireAuth) {
+    headers.Authorization = `Bearer ${getToken()}`
+  }
   const response = await fetch(`${BASE_URL}${endpoint}`, {
     method: "POST",
     headers,
@@ -28,8 +37,11 @@ export async function _post(endpoint, body, token) {
   return handleResponse(response)
 }
 
-export async function _delete(endpoint, token) {
-  const headers = token ? { Authorization: `Bearer ${token}` } : {}
+export async function _delete(endpoint, requireAuth = false) {
+  const headers = {}
+  if (requireAuth) {
+    headers.Authorization = `Bearer ${getToken()}`
+  }
   const response = await fetch(`${BASE_URL}${endpoint}`, {
     method: "DELETE",
     headers

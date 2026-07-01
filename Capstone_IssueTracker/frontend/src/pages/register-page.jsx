@@ -1,9 +1,11 @@
 import { useState } from "react"
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import { registerUser } from "../services/api"
+import { validateRegister } from "../utils/validations"
 import "./register-page.css"
 
 function RegisterPage() {
+  const navigate = useNavigate()
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -11,32 +13,7 @@ function RegisterPage() {
   const [message, setMessage] = useState("")
 
   function validate() {
-    const newErrors = {}
-
-    if (!name.trim()) {
-      newErrors.name = "Full name is required."
-    }
-
-    if (!email.trim()) {
-      newErrors.email = "Email is required."
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      newErrors.email = "Enter a valid email address."
-    }
-
-    if (!password) {
-      newErrors.password = "Password is required."
-    } else if (password.length < 6) {
-      newErrors.password = "Password must be at least 6 characters long."
-    } else if (!/[A-Z]/.test(password)) {
-      newErrors.password = "Password must contain one uppercase letter."
-    } else if (!/[a-z]/.test(password)) {
-      newErrors.password = "Password must contain one lowercase letter."
-    } else if (!/[0-9]/.test(password)) {
-      newErrors.password = "Password must contain one digit."
-    } else if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
-      newErrors.password = "Password must contain one special character."
-    }
-
+    const newErrors = validateRegister(name, email, password)
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
@@ -46,7 +23,8 @@ function RegisterPage() {
     if (!validate()) return
 
     try {
-      await registerUser(name, email, password)
+      const encodedPassword = btoa(password)
+      await registerUser({ name, email, password: encodedPassword })
       setMessage("Registration successful! Please login.")
       setName("")
       setEmail("")

@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { useNavigate, Link } from "react-router-dom"
 import { loginUser } from "../services/api"
+import { validateLogin } from "../utils/validations"
 import "./login-page.css"
 
 function LoginPage() {
@@ -11,18 +12,7 @@ function LoginPage() {
   const [message, setMessage] = useState("")
 
   function validate() {
-    const newErrors = {}
-
-    if (!email.trim()) {
-      newErrors.email = "Email is required."
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      newErrors.email = "Enter a valid email address."
-    }
-
-    if (!password) {
-      newErrors.password = "Password is required."
-    }
-
+    const newErrors = validateLogin(email, password)
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
@@ -32,9 +22,10 @@ function LoginPage() {
     if (!validate()) return
 
     try {
-      const result = await loginUser(email, password)
+      const encodedPassword = btoa(password)
+      const result = await loginUser({ email, password: encodedPassword })
       localStorage.setItem("token", result.access_token)
-      navigate("/login")
+      navigate("/projects")
     } catch (err) {
       setMessage(err.message || "Login failed")
     }

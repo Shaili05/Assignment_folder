@@ -3,7 +3,7 @@ from database import users_collection
 from models.user_model import user_helper, create_user_document
 from fastapi import HTTPException
 from utils.auth import create_access_token
-
+import base64
 
 def hash_password(password: str) -> str:
     """Hash password using bcrypt"""
@@ -24,7 +24,8 @@ def register_user(name: str, email: str, password: str, role: str):
     if existing_user:
         raise HTTPException(status_code=409, detail="Email already registered")
     
-    hashed_password = hash_password(password)
+    decoded_password = base64.b64decode(password).decode('utf-8')
+    hashed_password = hash_password(decoded_password)
     user_doc = create_user_document(name, email, hashed_password, role)
     result = users_collection.insert_one(user_doc)
     new_user = users_collection.find_one({"_id": result.inserted_id})
@@ -45,7 +46,8 @@ def login_user(email: str, password: str):
         raise HTTPException(status_code=401, detail="Invalid email or password")
     
     # Step 2: Check password against stored hash
-    if not verify_password(password, user["password"]):
+    decoded_password = base64.b64decode(password).decode('utf-8')
+    if not verify_password(decoded_password, user["password"]):
         raise HTTPException(status_code=401, detail="Invalid email or password")
     
     # Step 3: Create JWT token with user info inside
