@@ -15,3 +15,11 @@ export async function getProjects() {
 export async function createProject(payload) {
   return _post("/projects/", payload, true)
 }
+
+export async function getIssues(projectId) {
+  return _get(`/issues/project/${projectId}`, true)
+}
+
+export async function createIssue(payload) {
+  return _post("/issues/", payload, true)
+}
