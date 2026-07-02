@@ -48,3 +48,16 @@ export async function _delete(endpoint, requireAuth = false) {
   })
   return handleResponse(response)
 }
+
+export async function _patch(endpoint, body, requireAuth = false) {
+  const headers = { "Content-Type": "application/json" }
+  if (requireAuth) {
+    headers.Authorization = `Bearer ${getToken()}`
+  }
+  const response = await fetch(`${BASE_URL}${endpoint}`, {
+    method: "PATCH",
+    headers,
+    body: JSON.stringify(body)
+  })
+  return handleResponse(response)
+}
