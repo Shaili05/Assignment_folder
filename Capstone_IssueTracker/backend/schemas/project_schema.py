@@ -15,3 +15,6 @@ class ProjectResponse(BaseModel):
     project_key: str
     members: List[str]
     owner_id: str
+
+class ProjectDescriptionUpdate(BaseModel):
+    description: str
