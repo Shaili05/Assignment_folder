@@ -115,3 +115,8 @@ def delete_sprint(sprint_id: str):
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Sprint not found")
     return {"message": "Sprint deleted successfully"}
+
+
+def get_active_sprint_count():
+    """Returns count of currently active sprints across all projects."""
+    return sprints_collection.count_documents({"status": "active"})

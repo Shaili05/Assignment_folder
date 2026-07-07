@@ -1,12 +1,14 @@
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import Layout from "../components/Layout"
-import { getProjects } from "../services/api"
+import { getProjects, getIssueStats, getActiveSprintCount } from "../services/api"
 import "./dashboard-page.css"
 
 function DashboardPage() {
   const navigate = useNavigate()
   const [projects, setProjects] = useState([])
+  const [issueStats, setIssueStats] = useState({ total_issues: 0, open_issues: 0 })
+  const [activeSprints, setActiveSprints] = useState(0)
   const [loading, setLoading] = useState(true)
 
   const userStr = localStorage.getItem("user")
@@ -21,14 +23,25 @@ function DashboardPage() {
       const result = await getProjects()
       if (Array.isArray(result)) setProjects(result)
     } catch (err) {}
+
+    try {
+      const stats = await getIssueStats()
+      if (stats) setIssueStats(stats)
+    } catch (err) {}
+
+    try {
+      const sprintCount = await getActiveSprintCount()
+      if (sprintCount) setActiveSprints(sprintCount.active_sprints)
+    } catch (err) {}
+
     setLoading(false)
   }
 
   const stats = [
     { label: "Total Projects", value: projects.length, icon: "▤", color: "var(--color-primary)", bg: "var(--color-primary-light)" },
-    { label: "Total Issues", value: 0, icon: "◈", color: "var(--color-info)", bg: "var(--color-info-bg)" },
-    { label: "Open Issues", value: 0, icon: "◉", color: "var(--color-warning)", bg: "var(--color-warning-bg)" },
-    { label: "Active Sprints", value: 0, icon: "▲", color: "var(--color-success)", bg: "var(--color-success-bg)" },
+    { label: "Total Issues", value: issueStats.total_issues, icon: "◈", color: "var(--color-info)", bg: "var(--color-info-bg)" },
+    { label: "Open Issues", value: issueStats.open_issues, icon: "◉", color: "var(--color-warning)", bg: "var(--color-warning-bg)" },
+    { label: "Active Sprints", value: activeSprints, icon: "▲", color: "var(--color-success)", bg: "var(--color-success-bg)" },
   ]
 
   function getInitials(name) {

@@ -112,3 +112,11 @@ export async function getAssignedCounts() {
 export async function deleteUser(userId) {
   return _delete(`/users/${userId}`, true)
 }
+
+
+export async function getIssueStats() {
+  return _get("/issues/stats", true)
+}
+export async function getActiveSprintCount() {
+  return _get("/sprints/active-count", true)
+}

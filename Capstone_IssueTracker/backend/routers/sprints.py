@@ -4,6 +4,7 @@ from services.sprint_service import (
     create_sprint, get_sprints_by_project, add_issue_to_sprint,
     remove_issue_from_sprint, update_sprint_details, update_sprint_status, delete_sprint)
 from utils.dependencies import get_current_user, require_admin
+from services.sprint_service import get_active_sprint_count
 
 router = APIRouter(
     prefix="/api/sprints",
@@ -24,6 +25,10 @@ def create_new_sprint(sprint: SprintCreate, current_user: dict = Depends(require
 def list_sprints(project_id: str, current_user: dict = Depends(get_current_user)):
     return get_sprints_by_project(project_id)
 
+@router.get("/active-count")
+def active_sprint_count(current_user: dict = Depends(get_current_user)):
+    return {"active_sprints": get_active_sprint_count()}
+
 @router.post("/{sprint_id}/issues/{issue_id}")
 def add_issue(sprint_id: str, issue_id: str, current_user: dict = Depends(get_current_user)):
     return add_issue_to_sprint(sprint_id, issue_id)
@@ -43,4 +48,3 @@ def edit_sprint(sprint_id: str, body: SprintUpdate, current_user: dict = Depends
 @router.delete("/{sprint_id}")
 def remove_sprint(sprint_id: str, current_user: dict = Depends(require_admin)):
     return delete_sprint(sprint_id)
-

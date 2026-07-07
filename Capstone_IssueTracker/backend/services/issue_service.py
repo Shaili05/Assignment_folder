@@ -146,3 +146,9 @@ def get_assigned_counts_by_user():
     ]
     results = issues_collection.aggregate(pipeline)
     return {r["_id"]: r["count"] for r in results}
+
+def get_issue_stats():
+    """Returns total issue count and open (non-DONE) issue count across all projects."""
+    total = issues_collection.count_documents({})
+    open_count = issues_collection.count_documents({"status": {"$ne": "DONE"}})
+    return {"total_issues": total, "open_issues": open_count}

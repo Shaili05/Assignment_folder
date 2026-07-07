@@ -6,6 +6,7 @@ from services.issue_service import (
     update_issue_details, delete_issue)
 from utils.dependencies import get_current_user, require_admin
 from services.issue_service import get_assigned_counts_by_user
+from services.issue_service import get_issue_stats
 from pydantic import BaseModel
 
 router = APIRouter(prefix="/api/issues", tags=["Issues"])
@@ -34,6 +35,10 @@ def list_my_issues(current_user: dict = Depends(get_current_user)):
 def assigned_counts(current_user: dict = Depends(require_admin)):
     return get_assigned_counts_by_user()
 
+@router.get("/stats")
+def issue_stats(current_user: dict = Depends(get_current_user)):
+    return get_issue_stats()
+
 @router.get("/project/{project_id}")
 def list_issues(project_id: str, current_user: dict = Depends(get_current_user)):
     return get_issues_by_project(project_id)
@@ -41,7 +46,6 @@ def list_issues(project_id: str, current_user: dict = Depends(get_current_user))
 @router.get("/{issue_id}", response_model=IssueResponse)
 def get_issue(issue_id: str, current_user: dict = Depends(get_current_user)):
     return get_issue_by_id(issue_id)
-
 
 @router.patch("/{issue_id}/status", response_model=IssueResponse)
 def update_status(issue_id: str, body: StatusUpdate, current_user: dict = Depends(get_current_user)):
@@ -52,21 +56,17 @@ def update_status(issue_id: str, body: StatusUpdate, current_user: dict = Depend
         current_user_role=current_user.get("role")
     )
 
-
 @router.patch("/{issue_id}/assign", response_model=IssueResponse)
 def assign_issue(issue_id: str, body: AssigneeUpdate, current_user: dict = Depends(require_admin)):
     """Admin reassigns an issue to a different user."""
     return reassign_issue(issue_id, body.assignee_id)
-
 
 @router.patch("/{issue_id}", response_model=IssueResponse)
 def edit_issue(issue_id: str, body: IssueUpdate, current_user: dict = Depends(require_admin)):
     """Admin edits issue description/priority/type. Title is immutable."""
     return update_issue_details(issue_id, body.description, body.priority, body.issue_type)
 
-
 @router.delete("/{issue_id}")
 def remove_issue(issue_id: str, current_user: dict = Depends(require_admin)):
     """Admin deletes an issue"""
     return delete_issue(issue_id)
-
