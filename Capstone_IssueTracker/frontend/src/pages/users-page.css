@@ -1,0 +1,19 @@
+.users-container { max-width: 900px; }
+.users-title { font-size: 24px; font-weight: 700; color: var(--color-text); margin-bottom: 16px; }
+.users-message { color: var(--color-success); font-size: 13px; margin-bottom: 12px; }
+.users-list { background: var(--color-surface); padding: 20px; border-radius: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+.users-table { width: 100%; border-collapse: collapse; }
+.users-table th { text-align: left; font-size: 12px; color: var(--color-text-muted); padding: 8px; border-bottom: 1px solid var(--color-border); }
+.users-table td { padding: 10px 8px; font-size: 14px; border-bottom: 1px solid var(--color-border); }
+.role-select { padding: 5px 8px; border-radius: 6px; border: 1px solid var(--color-border); font-size: 13px; }
+.work-count-badge {
+  font-size: 12px; padding: 3px 10px; border-radius: 12px;
+  background: var(--color-primary-light); color: var(--color-primary); font-weight: 600;
+}
+.muted-text { color: var(--color-text-muted); font-size: 14px; }
+
+.role-locked {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  font-style: italic;
+}
