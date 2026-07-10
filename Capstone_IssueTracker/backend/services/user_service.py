@@ -121,3 +121,59 @@ def delete_user(user_id: str, current_user_id: str):
 
     users_collection.delete_one({"_id": ObjectId(user_id)})
     return {"message": "User deleted successfully"}
+
+
+
+def get_user_by_id(user_id: str):
+    from bson import ObjectId
+    try:
+        user = users_collection.find_one({"_id": ObjectId(user_id)})
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid user_id format")
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return {
+        "id": str(user["_id"]),
+        "user_id": str(user["_id"]),
+        "name": user["name"],
+        "email": user["email"],
+        "role": user["role"]
+    }
+
+
+def update_own_profile(user_id: str, name: str):
+    from bson import ObjectId
+    if not name.strip():
+        raise HTTPException(status_code=400, detail="Name cannot be empty")
+
+    result = users_collection.update_one(
+        {"_id": ObjectId(user_id)},
+        {"$set": {"name": name}}
+    )
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="User not found")
+    updated = users_collection.find_one({"_id": ObjectId(user_id)})
+    return {"id": str(updated["_id"]), "name": updated["name"], "email": updated["email"], "role": updated["role"]}
+
+
+def change_own_password(user_id: str, current_password_b64: str, new_password_b64: str):
+    from bson import ObjectId
+    user = users_collection.find_one({"_id": ObjectId(user_id)})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    try:
+        current_decoded = base64.b64decode(current_password_b64).decode('utf-8')
+        new_decoded = base64.b64decode(new_password_b64).decode('utf-8')
+    except (binascii.Error, UnicodeDecodeError):
+        raise HTTPException(status_code=400, detail="Invalid password encoding")
+
+    if not verify_password(current_decoded, user["password"]):
+        raise HTTPException(status_code=401, detail="Current password is incorrect")
+
+    if len(new_decoded) < 6:
+        raise HTTPException(status_code=400, detail="New password must be at least 6 characters")
+
+    hashed = hash_password(new_decoded)
+    users_collection.update_one({"_id": ObjectId(user_id)}, {"$set": {"password": hashed}})
+    return {"message": "Password updated successfully"}

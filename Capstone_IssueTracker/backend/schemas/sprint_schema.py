@@ -16,12 +16,14 @@ class SprintCreate(BaseModel):
     goal: Optional[str] = ""
     start_date: date
     end_date: date
+    status: SprintStatus = SprintStatus.planned
 
 
 class SprintUpdate(BaseModel):
     name: Optional[str] = None
     goal: Optional[str] = None
-
+    start_date: Optional[date] = None
+    end_date: Optional[date] = None
 
 class SprintStatusUpdate(BaseModel):
     status: SprintStatus

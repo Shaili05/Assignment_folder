@@ -223,3 +223,7 @@
   flex: 1;
   padding: 24px;
 }
+
+
+.user-info-link { text-decoration: none; color: inherit; cursor: pointer; }
+.user-info-link:hover .user-info { opacity: 0.85; }

@@ -10,6 +10,7 @@ function DashboardPage() {
   const [issueStats, setIssueStats] = useState({ total_issues: 0, open_issues: 0 })
   const [activeSprints, setActiveSprints] = useState(0)
   const [loading, setLoading] = useState(true)
+  const [message, setMessage] = useState("")
 
   const userStr = localStorage.getItem("user")
   const user = userStr ? JSON.parse(userStr) : null
@@ -19,20 +20,32 @@ function DashboardPage() {
   }, [])
 
   async function fetchData() {
+    const errors = []
+
     try {
       const result = await getProjects()
       if (Array.isArray(result)) setProjects(result)
-    } catch (err) {}
+    } catch (err) {
+      errors.push("projects")
+    }
 
     try {
       const stats = await getIssueStats()
       if (stats) setIssueStats(stats)
-    } catch (err) {}
+    } catch (err) {
+      errors.push("issue stats")
+    }
 
     try {
       const sprintCount = await getActiveSprintCount()
       if (sprintCount) setActiveSprints(sprintCount.active_sprints)
-    } catch (err) {}
+    } catch (err) {
+      errors.push("sprint count")
+    }
+
+    if (errors.length > 0) {
+      setMessage(`Failed to load ${errors.join(", ")}. Please refresh the page.`)
+    }
 
     setLoading(false)
   }
@@ -66,6 +79,8 @@ function DashboardPage() {
             </button>
           )}
         </div>
+
+        {message && <p className="dashboard-error">{message}</p>}
 
         <div className="stats-grid">
           {stats.map((stat, i) => (

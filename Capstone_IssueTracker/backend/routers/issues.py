@@ -7,6 +7,7 @@ from services.issue_service import (
 from utils.dependencies import get_current_user, require_admin
 from services.issue_service import get_assigned_counts_by_user
 from services.issue_service import get_issue_stats
+from services.issue_service import get_issues_filtered
 from pydantic import BaseModel
 
 router = APIRouter(prefix="/api/issues", tags=["Issues"])
@@ -27,6 +28,17 @@ def create_new_issue(issue: IssueCreate, current_user: dict = Depends(get_curren
         parent_id=issue.parent_id
     )
 
+
+@router.get("/")
+def list_all_issues(
+    project_id: str = None,
+    search: str = None,
+    status: str = None,
+    assignee_id: str = None,
+    current_user: dict = Depends(get_current_user)
+):
+    return get_issues_filtered(current_user, project_id, search, status, assignee_id)    
+
 @router.get("/my-issues")
 def list_my_issues(current_user: dict = Depends(get_current_user)):
     return get_my_issues(current_user.get("user_id"))
@@ -40,8 +52,15 @@ def issue_stats(current_user: dict = Depends(get_current_user)):
     return get_issue_stats()
 
 @router.get("/project/{project_id}")
-def list_issues(project_id: str, current_user: dict = Depends(get_current_user)):
-    return get_issues_by_project(project_id)
+def list_issues(
+    project_id: str,
+    search: str = None,
+    status: str = None,
+    assignee_id: str = None,
+    current_user: dict = Depends(get_current_user)
+):
+    return get_issues_by_project(project_id, search, status, assignee_id)
+
 
 @router.get("/{issue_id}", response_model=IssueResponse)
 def get_issue(issue_id: str, current_user: dict = Depends(get_current_user)):

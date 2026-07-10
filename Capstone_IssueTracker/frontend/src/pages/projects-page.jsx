@@ -1,21 +1,30 @@
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import Layout from "../components/Layout"
-import { getProjects, createProject, getAllUsers, addProjectMember, removeProjectMember, getProjectMembers, deleteProject } from "../services/api"
+import ConfirmDialog from "../components/ConfirmDialog"
+import { getProjects, createProject, getAllUsers, addProjectMember, removeProjectMember, getProjectMembers, deleteProject, getAllIssues } from "../services/api"
 import "./projects-page.css"
+import "../styles/modal.css"
+import MemberSearchSelect from "../components/MemberSearchSelect"
 
 function ProjectsPage() {
   const navigate = useNavigate()
   const [projects, setProjects] = useState([])
-  const [name, setName] = useState("")
-  const [description, setDescription] = useState("")
-  const [projectKey, setProjectKey] = useState("")
+  const [allUsers, setAllUsers] = useState([])
   const [message, setMessage] = useState("")
   const [loading, setLoading] = useState(true)
-  const [allUsers, setAllUsers] = useState([])
   const [expandedProject, setExpandedProject] = useState(null)
   const [projectMembers, setProjectMembers] = useState([])
   const [openMenu, setOpenMenu] = useState(null)
+  const [projectStatus, setProjectStatus] = useState({})
+
+  const [showForm, setShowForm] = useState(false)
+  const [name, setName] = useState("")
+  const [description, setDescription] = useState("")
+  const [newMembers, setNewMembers] = useState([])
+
+  const [deleteTarget, setDeleteTarget] = useState(null)
+  const [removeMemberTarget, setRemoveMemberTarget] = useState(null)
 
   const userStr = localStorage.getItem("user")
   const user = userStr ? JSON.parse(userStr) : null
@@ -28,9 +37,29 @@ function ProjectsPage() {
   async function fetchProjects() {
     try {
       const result = await getProjects()
-      if (Array.isArray(result)) setProjects(result)
+      if (Array.isArray(result)) {
+        setProjects(result)
+        computeProjectStatuses(result)
+      }
     } catch (err) {}
     setLoading(false)
+  }
+
+  async function computeProjectStatuses(projectList) {
+    const statusMap = {}
+    for (const p of projectList) {
+      try {
+        const issues = await getAllIssues({ project_id: p.id })
+        if (Array.isArray(issues) && issues.length > 0) {
+          statusMap[p.id] = issues.every(i => i.status === "DONE") ? "completed" : "active"
+        } else {
+          statusMap[p.id] = "active"
+        }
+      } catch (err) {
+        statusMap[p.id] = "active"
+      }
+    }
+    setProjectStatus(statusMap)
   }
 
   async function fetchAllUsers() {
@@ -40,35 +69,51 @@ function ProjectsPage() {
     } catch (err) {}
   }
 
+  function openCreateForm() {
+    setName(""); setDescription(""); setNewMembers([])
+    setMessage("")
+    setShowForm(true)
+  }
+
+  function addNewMember(selectedUser) {
+    if (!selectedUser?.id) return
+    if (newMembers.some(m => m.id === selectedUser.id)) return
+    setNewMembers(prev => [...prev, selectedUser])
+  }
+
+  function removeNewMember(userId) {
+    setNewMembers(prev => prev.filter(m => m.id !== userId))
+  }
+
   async function handleCreate() {
     if (!name.trim()) { setMessage("Project name is required."); return }
-    if (!projectKey.trim()) { setMessage("Project key is required."); return }
     try {
-      await createProject({ name, description, project_key: projectKey, members: [] })
+      await createProject({
+        name, description,
+        members: newMembers.map(m => m.id)
+      })
       setMessage("Project created successfully!")
-      setName(""); setDescription(""); setProjectKey("")
+      setShowForm(false)
       fetchProjects()
     } catch (err) {
       setMessage(err.message || "Failed to create project")
     }
   }
 
-  async function handleDeleteProject(projectId) {
-    if (!window.confirm("Delete this project and all its issues/sprints? This cannot be undone.")) return
+  async function confirmDeleteProject() {
     try {
-      await deleteProject(projectId)
+      await deleteProject(deleteTarget.id)
       setOpenMenu(null)
+      setDeleteTarget(null)
       fetchProjects()
     } catch (err) {
       setMessage(err.message || "Failed to delete project")
+      setDeleteTarget(null)
     }
   }
 
   async function toggleMembers(projectId) {
-    if (expandedProject === projectId) {
-      setExpandedProject(null)
-      return
-    }
+    if (expandedProject === projectId) { setExpandedProject(null); return }
     setExpandedProject(projectId)
     try {
       const result = await getProjectMembers(projectId)
@@ -89,19 +134,18 @@ function ProjectsPage() {
     }
   }
 
-  async function handleRemoveMember(projectId, userId) {
-    if (!window.confirm("Remove this member from the project?")) return
+  async function confirmRemoveMember() {
     try {
-      await removeProjectMember(projectId, userId)
-      const result = await getProjectMembers(projectId)
+      await removeProjectMember(removeMemberTarget.projectId, removeMemberTarget.userId)
+      const result = await getProjectMembers(removeMemberTarget.projectId)
       if (Array.isArray(result)) setProjectMembers(result)
     } catch (err) {
       setMessage(err.message || "Failed to remove member")
     }
+    setRemoveMemberTarget(null)
   }
 
   const avatarColors = ["#7a1f2b", "#b23a48", "#6d4c8f", "#2e7d4f", "#c07a1e"]
-
   function getInitials(n) {
     return n?.trim() ? n.split(" ").map(w => w[0]).join("").toUpperCase().slice(0, 2) : "?"
   }
@@ -109,21 +153,15 @@ function ProjectsPage() {
   return (
     <Layout>
       <div className="projects-container">
-        <h1 className="projects-title">Projects</h1>
+        <div className="issues-header">
+          <h1 className="projects-title">Projects</h1>
+          {user?.role === "admin" && (
+            <button className="projects-button new-btn" onClick={openCreateForm}>+ New Project</button>
+          )}
+        </div>
 
-        {user?.role === "admin" && (
-          <div className="projects-form">
-            <h3 className="form-heading">Create New Project</h3>
-            <input className="projects-input" placeholder="Project Name *" value={name} onChange={e => setName(e.target.value)} />
-            <input className="projects-input" placeholder="Description" value={description} onChange={e => setDescription(e.target.value)} />
-            <input className="projects-input" placeholder="Project Key (e.g. PROJ) *" value={projectKey} onChange={e => setProjectKey(e.target.value)} />
-            <button className="projects-button" onClick={handleCreate}>Create Project</button>
-            {message && (
-              <p className={`projects-message ${message.includes("success") ? "" : "projects-error"}`}>
-                {message}
-              </p>
-            )}
-          </div>
+        {message && (
+          <p className={`projects-message ${message.includes("success") ? "" : "projects-error"}`}>{message}</p>
         )}
 
         <div className="projects-list">
@@ -143,14 +181,16 @@ function ProjectsPage() {
                 <div className="project-actions">
                   <button className="issue-btn" onClick={() => navigate(`/issues?project_id=${project.id}`)}>Issues</button>
                   <button className="sprint-btn" onClick={() => navigate(`/sprints?project_id=${project.id}`)}>Sprints</button>
-                  <span className="status-badge">Active</span>
+                  <span className={`status-badge ${projectStatus[project.id] === "completed" ? "status-completed" : ""}`}>
+                    {projectStatus[project.id] === "completed" ? "Completed" : "Active"}
+                  </span>
                   {user?.role === "admin" && (
                     <div className="row-menu-wrapper">
                       <button className="row-menu-btn" onClick={() => setOpenMenu(openMenu === project.id ? null : project.id)}>⋮</button>
                       {openMenu === project.id && (
                         <div className="row-menu-dropdown">
-                          <button onClick={() => { navigate(`/projects/${project.id}`); setOpenMenu(null) }}>View / Edit</button>
-                          <button className="row-menu-delete" onClick={() => handleDeleteProject(project.id)}>Delete</button>
+                          <button onClick={() => { navigate(`/projects/${project.id}?edit=true`); setOpenMenu(null) }}>Edit</button>
+                          <button className="row-menu-delete" onClick={() => { setDeleteTarget(project); setOpenMenu(null) }}>Delete</button>
                         </div>
                       )}
                     </div>
@@ -174,22 +214,15 @@ function ProjectsPage() {
                       projectMembers.map(m => (
                         <div key={m.id} className="member-row">
                           <span>{m.name} ({m.role})</span>
-                          <button className="remove-btn" onClick={() => handleRemoveMember(project.id, m.id)}>Remove</button>
+                          <button className="remove-btn" onClick={() => setRemoveMemberTarget({ projectId: project.id, userId: m.id, name: m.name })}>Remove</button>
                         </div>
                       ))
                     )}
-                    <select
-                      className="projects-input"
-                      value=""
-                      onChange={(e) => handleAddMember(project.id, e.target.value)}
-                    >
-                      <option value="">Add member...</option>
-                      {allUsers
-                        .filter(u => !projectMembers.some(m => m.id === u.id))
-                        .map(u => (
-                          <option key={u.id} value={u.id}>{u.name} ({u.role})</option>
-                        ))}
-                    </select>
+                    <MemberSearchSelect
+                      options={allUsers.filter(u => !projectMembers.some(m => m.id === u.id))}
+                      onSelect={(selectedUser) => handleAddMember(project.id, selectedUser.id)}
+                      placeholder="Search user to add..."
+                    />
                   </div>
                 )}
               </div>
@@ -197,6 +230,67 @@ function ProjectsPage() {
           )}
         </div>
       </div>
+
+      {showForm && (
+        <div className="modal-overlay" onClick={() => setShowForm(false)}>
+          <div className="modal-card" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Create Project</h3>
+              <button className="modal-close" onClick={() => setShowForm(false)}>×</button>
+            </div>
+            <div className="modal-body">
+              <label>Project Name *</label>
+              <input className="projects-input" value={name} onChange={e => setName(e.target.value)} />
+
+              <label>Description</label>
+              <textarea className="projects-input" rows={3} value={description} onChange={e => setDescription(e.target.value)} />
+
+              <label>Members</label>
+              <MemberSearchSelect
+                options={allUsers.filter(u => !newMembers.some(m => m.id === u.id))}
+                onSelect={addNewMember}
+                placeholder="Search user to add..."
+              />
+              {newMembers.length > 0 && (
+                <div className="member-panel">
+                  {newMembers.map(m => (
+                    <div key={m.id} className="member-row">
+                      <span>{m.name} ({m.role})</span>
+                      <button className="remove-btn" onClick={() => removeNewMember(m.id)}>Remove</button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {message && <p className="projects-error">{message}</p>}
+              <div className="modal-actions">
+                <button className="back-btn" onClick={() => setShowForm(false)}>Cancel</button>
+                <button className="projects-button" onClick={handleCreate}>Create Project</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {deleteTarget && (
+        <ConfirmDialog
+          message={`Delete "${deleteTarget.name}" and all its issues/sprints? This cannot be undone.`}
+          confirmLabel="Delete"
+          danger
+          onConfirm={confirmDeleteProject}
+          onCancel={() => setDeleteTarget(null)}
+        />
+      )}
+
+      {removeMemberTarget && (
+        <ConfirmDialog
+          message={`Remove ${removeMemberTarget.name} from this project?`}
+          confirmLabel="Remove"
+          danger
+          onConfirm={confirmRemoveMember}
+          onCancel={() => setRemoveMemberTarget(null)}
+        />
+      )}
     </Layout>
   )
 }

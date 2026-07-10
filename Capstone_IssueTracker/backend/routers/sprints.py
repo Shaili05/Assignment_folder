@@ -4,6 +4,7 @@ from services.sprint_service import (
     create_sprint, get_sprints_by_project, add_issue_to_sprint,
     remove_issue_from_sprint, update_sprint_details, update_sprint_status, delete_sprint)
 from utils.dependencies import get_current_user, require_admin
+from services.sprint_service import get_sprints_filtered
 from services.sprint_service import get_active_sprint_count
 
 router = APIRouter(
@@ -18,8 +19,14 @@ def create_new_sprint(sprint: SprintCreate, current_user: dict = Depends(require
         project_id=sprint.project_id,
         goal=sprint.goal,
         start_date=sprint.start_date,
-        end_date=sprint.end_date
+        end_date=sprint.end_date,
+        status=sprint.status.value
     )
+
+
+@router.get("/")
+def list_all_sprints(project_id: str = None, current_user: dict = Depends(get_current_user)):
+    return get_sprints_filtered(current_user, project_id)
 
 @router.get("/project/{project_id}")
 def list_sprints(project_id: str, current_user: dict = Depends(get_current_user)):
@@ -43,7 +50,8 @@ def change_sprint_status(sprint_id: str, body: SprintStatusUpdate, current_user:
 
 @router.patch("/{sprint_id}", response_model=SprintResponse)
 def edit_sprint(sprint_id: str, body: SprintUpdate, current_user: dict = Depends(require_admin)):
-    return update_sprint_details(sprint_id, body.name, body.goal)
+    return update_sprint_details(sprint_id, body.name, body.goal, body.start_date, body.end_date)
+
 
 @router.delete("/{sprint_id}")
 def remove_sprint(sprint_id: str, current_user: dict = Depends(require_admin)):

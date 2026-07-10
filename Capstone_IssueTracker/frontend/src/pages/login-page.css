@@ -83,3 +83,12 @@
 .auth-message { text-align: center; margin-top: 12px; }
 .auth-link { text-align: center; font-size: 13px; color: var(--color-text-muted); margin-top: 20px; }
 .auth-link-text { color: var(--color-primary); font-weight: 600; text-decoration: none; }
+
+
+.pw-input-wrapper { position: relative; display: flex; align-items: center; }
+.pw-input-wrapper input { padding-right: 40px; width: 100%; }
+.pw-eye {
+  position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+  cursor: pointer; color: #888; display: flex; align-items: center;
+}
+.pw-eye:hover { color: #333; }

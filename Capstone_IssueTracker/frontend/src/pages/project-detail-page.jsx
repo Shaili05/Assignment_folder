@@ -1,12 +1,15 @@
 import { useState, useEffect } from "react"
-import { useNavigate, useParams } from "react-router-dom"
+import { useNavigate, useParams, useSearchParams } from "react-router-dom"
 import Layout from "../components/Layout"
+import MemberSearchSelect from "../components/MemberSearchSelect"
 import { getProjectById, getProjectMembers, updateProjectDescription, getAllUsers, addProjectMember, removeProjectMember } from "../services/api"
 import "./project-detail-page.css"
+import "../styles/modal.css"
 
 function ProjectDetailPage() {
   const navigate = useNavigate()
   const { projectId } = useParams()
+  const [searchParams] = useSearchParams()
 
   const userStr = localStorage.getItem("user")
   const user = userStr ? JSON.parse(userStr) : null
@@ -15,7 +18,7 @@ function ProjectDetailPage() {
   const [project, setProject] = useState(null)
   const [members, setMembers] = useState([])
   const [allUsers, setAllUsers] = useState([])
-  const [editing, setEditing] = useState(false)
+  const [editing, setEditing] = useState(searchParams.get("edit") === "true")
   const [description, setDescription] = useState("")
   const [message, setMessage] = useState("")
   const [loading, setLoading] = useState(true)
@@ -58,10 +61,10 @@ function ProjectDetailPage() {
     }
   }
 
-  async function handleAddMember(userId) {
-    if (!userId) return
+  async function handleAddMember(selectedUser) {
+    if (!selectedUser?.id) return
     try {
-      await addProjectMember(projectId, userId)
+      await addProjectMember(projectId, selectedUser.id)
       const m = await getProjectMembers(projectId)
       if (Array.isArray(m)) setMembers(m)
     } catch (err) {
@@ -70,6 +73,7 @@ function ProjectDetailPage() {
   }
 
   async function handleRemoveMember(userId) {
+    if (!window.confirm("Remove this member from the project?")) return
     try {
       await removeProjectMember(projectId, userId)
       const m = await getProjectMembers(projectId)
@@ -88,34 +92,44 @@ function ProjectDetailPage() {
         <button className="back-btn" onClick={() => navigate("/projects")}>← Back to Projects</button>
 
         <div className="detail-header-card">
-          <div className="detail-title-row">
-            <h1 className="detail-title">{project.name}</h1>
-            <span className="detail-key">[{project.project_key}]</span>
-          </div>
-
           {editing ? (
-            <div className="detail-edit-form">
+            <div className="modal-body" style={{ padding: 0 }}>
+              <h3>Edit Project</h3>
+
+              <label>Project Name (locked)</label>
+              <input className="projects-input" value={project.name} disabled />
+
+              <label>Project Key (locked)</label>
+              <input className="projects-input" value={project.project_key} disabled />
+
+              <label>Description</label>
               <textarea
-                className="detail-textarea"
+                className="projects-input"
+                rows={4}
                 value={description}
                 onChange={e => setDescription(e.target.value)}
                 placeholder="Project description"
               />
-              <div className="detail-edit-actions">
-                <button className="issues-button" onClick={handleSave}>Save</button>
+
+              {message && <p className="detail-message">{message}</p>}
+              <div className="modal-actions">
                 <button className="back-btn" onClick={() => { setEditing(false); setDescription(project.description || "") }}>Cancel</button>
+                <button className="projects-button" onClick={handleSave}>Save</button>
               </div>
             </div>
           ) : (
-            <p className="detail-desc">{project.description || "No description provided."}</p>
+            <>
+              <div className="detail-title-row">
+                <h1 className="detail-title">{project.name}</h1>
+                <span className="detail-key">[{project.project_key}]</span>
+              </div>
+              <p className="detail-desc">{project.description || "No description provided."}</p>
+              {isAdmin && (
+                <button className="issue-btn" onClick={() => setEditing(true)}>Edit Project</button>
+              )}
+              {message && <p className="detail-message">{message}</p>}
+            </>
           )}
-
-          {isAdmin && !editing && (
-            <button className="issue-btn" onClick={() => setEditing(true)}>Edit Description</button>
-          )}
-          {message && <p className="detail-message">{message}</p>}
-
-          <p className="detail-note">Project name and key cannot be changed after creation.</p>
         </div>
 
         <div className="detail-members-card">
@@ -133,18 +147,11 @@ function ProjectDetailPage() {
             ))
           )}
           {isAdmin && (
-            <select
-              className="detail-add-select"
-              value=""
-              onChange={(e) => handleAddMember(e.target.value)}
-            >
-              <option value="">Add member...</option>
-              {allUsers
-                .filter(u => !members.some(m => m.id === u.id))
-                .map(u => (
-                  <option key={u.id} value={u.id}>{u.name} ({u.role})</option>
-                ))}
-            </select>
+            <MemberSearchSelect
+              options={allUsers.filter(u => !members.some(m => m.id === u.id))}
+              onSelect={handleAddMember}
+              placeholder="Search user to add..."
+            />
           )}
         </div>
 

@@ -43,3 +43,5 @@
   padding: 8px 12px; border-radius: 8px;
   border: 1.5px solid var(--color-border); font-size: 13px;
 }
+
+.comment-textarea { min-height: 110px; resize: vertical; font-family: inherit; width: 100%; box-sizing: border-box; }

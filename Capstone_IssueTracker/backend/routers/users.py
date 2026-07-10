@@ -1,9 +1,10 @@
 from fastapi import APIRouter, Depends
-from schemas.user_schema import UserRegister, UserLogin, UserResponse
-from services.user_service import register_user, login_user
+from schemas.user_schema import UserRegister, UserLogin, UserResponse, RoleUpdate, ProfileUpdate, PasswordChange
+from services.user_service import (
+    register_user, login_user, get_all_users, update_user_role, delete_user,
+    get_user_by_id, update_own_profile, change_own_password
+)
 from utils.dependencies import get_current_user, require_admin
-from schemas.user_schema import RoleUpdate
-from services.user_service import get_all_users, update_user_role, delete_user
 
 router = APIRouter(
     prefix="/api/users",
@@ -22,18 +23,22 @@ def login(user: UserLogin):
 
 @router.get("/me")
 def get_me(current_user: dict = Depends(get_current_user)):
-    """Get current logged-in user info - requires valid token"""
-    return {
-        "user_id": current_user.get("user_id"),
-        "email": current_user.get("email"),
-        "role": current_user.get("role")
-    }
+    """Get current logged-in user's full profile info"""
+    return get_user_by_id(current_user.get("user_id"))
+
+@router.patch("/me")
+def update_me(payload: ProfileUpdate, current_user: dict = Depends(get_current_user)):
+    """Update own name. Email cannot be changed."""
+    return update_own_profile(current_user.get("user_id"), payload.name)
+
+@router.patch("/me/password")
+def change_my_password(payload: PasswordChange, current_user: dict = Depends(get_current_user)):
+    return change_own_password(current_user.get("user_id"), payload.current_password, payload.new_password)
 
 @router.get("/admin-only")
 def admin_only(current_user: dict = Depends(require_admin)):
     """Test endpoint - only admin can access this"""
     return {"message": f"Welcome Admin {current_user.get('email')}"}
-
 
 @router.get("/")
 def list_users(current_user: dict = Depends(require_admin)):

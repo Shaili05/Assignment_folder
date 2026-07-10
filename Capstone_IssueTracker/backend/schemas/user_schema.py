@@ -34,4 +34,12 @@ class UserListItem(BaseModel):
     id: str
     name: str
     email: str
-    role: str
+    role: str#
+
+
+class ProfileUpdate(BaseModel):
+    name: str
+
+class PasswordChange(BaseModel):
+    current_password: str
+    new_password: str

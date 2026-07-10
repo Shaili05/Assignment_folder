@@ -40,9 +40,20 @@ def create_issue(title: str, description: str, issue_type: str,
     new_issue = issues_collection.find_one({"_id": result.inserted_id})
     return issue_helper(new_issue)
 
-def get_issues_by_project(project_id: str):
-    issues = issues_collection.find({"project_id": project_id})
+def get_issues_by_project(project_id: str, search: str = None, status: str = None, assignee_id: str = None):
+    query = {"project_id": project_id}
+    if status:
+        query["status"] = status
+    if assignee_id:
+        query["assignee_id"] = assignee_id
+    if search:
+        query["$or"] = [
+            {"title": {"$regex": search, "$options": "i"}},
+            {"description": {"$regex": search, "$options": "i"}}
+        ]
+    issues = issues_collection.find(query)
     return [issue_helper(i) for i in issues]
+
 
 def get_issue_by_id(issue_id: str):
     try:
@@ -152,3 +163,30 @@ def get_issue_stats():
     total = issues_collection.count_documents({})
     open_count = issues_collection.count_documents({"status": {"$ne": "DONE"}})
     return {"total_issues": total, "open_issues": open_count}
+
+
+def get_issues_filtered(current_user, project_id=None, search=None, status=None, assignee_id=None):
+    from services.project_service import get_all_projects
+    accessible = get_all_projects(current_user)
+    accessible_ids = [p["id"] for p in accessible]
+
+    if project_id:
+        if project_id not in accessible_ids:
+            raise HTTPException(status_code=403, detail="No access to this project")
+        query = {"project_id": project_id}
+    else:
+        if not accessible_ids:
+            return []
+        query = {"project_id": {"$in": accessible_ids}}
+
+    if status:
+        query["status"] = status
+    if assignee_id:
+        query["assignee_id"] = assignee_id
+    if search:
+        query["$or"] = [
+            {"title": {"$regex": search, "$options": "i"}},
+            {"description": {"$regex": search, "$options": "i"}}
+        ]
+    issues = issues_collection.find(query)
+    return [issue_helper(i) for i in issues]

@@ -1,10 +1,16 @@
+export function validateEmail(email) {
+  if (!email.trim()) return "Email is required."
+  const strictRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z]+\.com$/
+  if (!strictRegex.test(email)) {
+    return "Enter a valid email address (letters only after @, must end in .com)."
+  }
+  return null
+}
+
 export function validateLogin(email, password) {
   const errors = {}
-  if (!email.trim()) {
-    errors.email = "Email is required."
-  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    errors.email = "Enter a valid email address."
-  }
+  const emailError = validateEmail(email)
+  if (emailError) errors.email = emailError
   if (!password) {
     errors.password = "Password is required."
   }
@@ -15,12 +21,11 @@ export function validateRegister(name, email, password) {
   const errors = {}
   if (!name.trim()) {
     errors.name = "Full name is required."
+  } else if (!/^[a-zA-Z\s]+$/.test(name.trim())) {
+    errors.name = "Name should only contain letters and spaces."
   }
-  if (!email.trim()) {
-    errors.email = "Email is required."
-  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    errors.email = "Enter a valid email address."
-  }
+  const emailError = validateEmail(email)
+  if (emailError) errors.email = emailError
   if (!password) {
     errors.password = "Password is required."
   } else if (password.length < 6) {

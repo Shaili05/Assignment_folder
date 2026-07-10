@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react"
 import Layout from "../components/Layout"
+import ConfirmDialog from "../components/ConfirmDialog"
 import { getAllUsers, updateUserRole, getAssignedCounts, deleteUser } from "../services/api"
 import "./users-page.css"
 
@@ -8,6 +9,7 @@ function UsersPage() {
   const [counts, setCounts] = useState({})
   const [loading, setLoading] = useState(true)
   const [message, setMessage] = useState("")
+  const [deleteTarget, setDeleteTarget] = useState(null)
 
   const userStr = localStorage.getItem("user")
   const currentUser = userStr ? JSON.parse(userStr) : null
@@ -36,15 +38,15 @@ function UsersPage() {
     }
   }
 
-  async function handleDeleteUser(userId, userName) {
-    if (!window.confirm(`Delete ${userName}'s account permanently? This cannot be undone.`)) return
+  async function confirmDeleteUser() {
     try {
-      await deleteUser(userId)
+      await deleteUser(deleteTarget.id)
       setMessage("User deleted successfully.")
       fetchAll()
     } catch (err) {
       setMessage(err.message || "Failed to delete user")
     }
+    setDeleteTarget(null)
   }
 
   return (
@@ -87,7 +89,7 @@ function UsersPage() {
                       </td>
                       <td>
                         {u.role !== "admin" && (
-                          <button className="row-menu-delete" onClick={() => handleDeleteUser(u.id, u.name)}>Delete</button>
+                          <button className="row-menu-delete" onClick={() => setDeleteTarget(u)}>Delete</button>
                         )}
                       </td>
                     </tr>
@@ -98,6 +100,16 @@ function UsersPage() {
           )}
         </div>
       </div>
+
+      {deleteTarget && (
+        <ConfirmDialog
+          message={`Delete ${deleteTarget.name}'s account permanently? This cannot be undone.`}
+          confirmLabel="Delete"
+          danger
+          onConfirm={confirmDeleteUser}
+          onCancel={() => setDeleteTarget(null)}
+        />
+      )}
     </Layout>
   )
 }

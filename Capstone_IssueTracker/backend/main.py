@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routers import users, projects, issues, sprints
+from routers import users, projects, issues, sprints, comments
 import os
 from services.user_service import register_user, get_user_by_email
 from schemas.user_schema import UserRegister, UserRole
@@ -50,6 +50,7 @@ app.include_router(users.router)
 app.include_router(projects.router)
 app.include_router(issues.router)
 app.include_router(sprints.router)
+app.include_router(comments.router)
 
 @app.get("/")
 def health_check():

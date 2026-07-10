@@ -20,6 +20,16 @@ function Layout({ children }) {
     }
   }, [])
 
+  useEffect(() => {
+    function handleStorageChange(e) {
+      if (e.key === "token" && !e.newValue) {
+        navigate("/login")
+      }
+    }
+    window.addEventListener("storage", handleStorageChange)
+    return () => window.removeEventListener("storage", handleStorageChange)
+  }, [navigate])
+
   function handleLogout() {
     localStorage.removeItem("token")
     localStorage.removeItem("user")
@@ -27,11 +37,12 @@ function Layout({ children }) {
   }
 
   const navItems = [
-    { path: "/dashboard", label: "Dashboard", icon: "▦" },
     { path: "/projects", label: "Projects", icon: "▤" },
+    { path: "/issues", label: "Issues", icon: "◈" },
+    { path: "/sprints", label: "Sprints", icon: "▲" },
   ]
   if (hasMyWork) {
-    navItems.push({ path: "/my-work", label: "My Assigned Work", icon: "◈" })
+    navItems.push({ path: "/my-work", label: "My Assigned Work", icon: "◉" })
   }
   if (user?.role === "admin") {
     navItems.push({ path: "/users", label: "Users", icon: "◇" })
@@ -58,24 +69,20 @@ function Layout({ children }) {
         </nav>
         <div className="sidebar-footer">
           {user && (
-            <div className="user-info">
-              <div className="user-avatar">{user.name?.[0]?.toUpperCase() || "U"}</div>
-              <div className="user-details">
-                <p className="user-name">{user.name}</p>
-                <p className="user-role">{user.role}</p>
+            <Link to="/profile" className="user-info-link">
+              <div className="user-info">
+                <div className="user-avatar">{user.name?.[0]?.toUpperCase() || "U"}</div>
+                <div className="user-details">
+                  <p className="user-name">{user.name}</p>
+                  <p className="user-role">{user.role}</p>
+                </div>
               </div>
-            </div>
+            </Link>
           )}
           <button className="logout-btn" onClick={handleLogout}>Logout</button>
         </div>
       </aside>
       <div className="main-wrapper">
-        <header className="topbar">
-          <div className="topbar-search">
-            <span className="search-icon">⌕</span>
-            <input className="search-input" placeholder="Search..." />
-          </div>
-        </header>
         <main className="main-content">
           {children}
         </main>

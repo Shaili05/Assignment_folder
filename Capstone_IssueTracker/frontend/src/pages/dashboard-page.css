@@ -217,3 +217,13 @@
 
 .project-name-link { cursor: pointer; }
 .project-name-link:hover { text-decoration: underline; color: var(--color-primary); }
+
+.dashboard-error {
+  background: #fdecea;
+  border: 1px solid #f5c2c0;
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-bottom: 16px;
+  color: #b3261e;
+  font-size: 13px;
+}

@@ -16,10 +16,6 @@ export async function createProject(payload) {
   return _post("/projects/", payload, true)
 }
 
-export async function getIssues(projectId) {
-  return _get(`/issues/project/${projectId}`, true)
-}
-
 export async function createIssue(payload) {
   return _post("/issues/", payload, true)
 }
@@ -27,7 +23,6 @@ export async function createIssue(payload) {
 export async function updateIssueStatus(issueId, status) {
   return _patch(`/issues/${issueId}/status`, { status }, true)
 }
-
 
 export async function getSprints(projectId) {
   return _get(`/sprints/project/${projectId}`, true)
@@ -45,7 +40,6 @@ export async function addIssueToSprint(sprintId, issueId) {
   return _post(`/sprints/${sprintId}/issues/${issueId}`, {}, true)
 }
 
-
 export async function getAllUsers() {
   return _get("/users/", true)
 }
@@ -58,7 +52,6 @@ export async function getProjectMembers(projectId) {
   return _get(`/projects/${projectId}/members`, true)
 }
 
-
 export async function getMyIssues() {
   return _get("/issues/my-issues", true)
 }
@@ -66,7 +59,6 @@ export async function getMyIssues() {
 export async function reassignIssue(issueId, assigneeId) {
   return _patch(`/issues/${issueId}/assign`, { assignee_id: assigneeId }, true)
 }
-
 
 export async function addProjectMember(projectId, userId) {
   return _post(`/projects/${projectId}/members/${userId}`, {}, true)
@@ -104,7 +96,6 @@ export async function deleteSprint(sprintId) {
   return _delete(`/sprints/${sprintId}`, true)
 }
 
-
 export async function getAssignedCounts() {
   return _get("/issues/assigned-counts", true)
 }
@@ -113,10 +104,52 @@ export async function deleteUser(userId) {
   return _delete(`/users/${userId}`, true)
 }
 
-
 export async function getIssueStats() {
   return _get("/issues/stats", true)
 }
+
 export async function getActiveSprintCount() {
   return _get("/sprints/active-count", true)
+}
+
+export async function getAllIssues(filters = {}) {
+  const params = new URLSearchParams(filters).toString()
+  return _get(`/issues/${params ? "?" + params : ""}`, true)
+}
+
+export async function getAllSprints(filters = {}) {
+  const params = new URLSearchParams(filters).toString()
+  return _get(`/sprints/${params ? "?" + params : ""}`, true)
+}
+
+export async function getMyProfile() {
+  return _get("/users/me", true)
+}
+
+export async function updateMyProfile(payload) {
+  return _patch("/users/me", payload, true)
+}
+
+export async function changeMyPassword(payload) {
+  return _patch("/users/me/password", payload, true)
+}
+
+export async function getIssueById(issueId) {
+  return _get(`/issues/${issueId}`, true)
+}
+
+export async function getComments(issueId) {
+  return _get(`/issues/${issueId}/comments`, true)
+}
+
+export async function addComment(issueId, content) {
+  return _post(`/issues/${issueId}/comments`, { content }, true)
+}
+
+export async function updateComment(commentId, content) {
+  return _patch(`/issues/comments/${commentId}`, { content }, true)
+}
+
+export async function deleteComment(commentId) {
+  return _delete(`/issues/comments/${commentId}`, true)
 }

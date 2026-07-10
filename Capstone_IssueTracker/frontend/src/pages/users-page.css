@@ -6,14 +6,47 @@
 .users-table th { text-align: left; font-size: 12px; color: var(--color-text-muted); padding: 8px; border-bottom: 1px solid var(--color-border); }
 .users-table td { padding: 10px 8px; font-size: 14px; border-bottom: 1px solid var(--color-border); }
 .role-select { padding: 5px 8px; border-radius: 6px; border: 1px solid var(--color-border); font-size: 13px; }
+.role-locked { font-size: 13px; color: var(--color-text-muted); font-style: italic; }
 .work-count-badge {
   font-size: 12px; padding: 3px 10px; border-radius: 12px;
   background: var(--color-primary-light); color: var(--color-primary); font-weight: 600;
 }
 .muted-text { color: var(--color-text-muted); font-size: 14px; }
 
-.role-locked {
+.row-menu-delete {
+  padding: 7px 18px;
+  background: #b3261e;
+  color: #ffffff !important;
+  border: none;
+  border-radius: 6px;
   font-size: 13px;
-  color: var(--color-text-muted);
-  font-style: italic;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.row-menu-delete:hover { background: #8f1e18; }
+
+
+.row-menu-delete {
+  padding: 7px 18px;
+  background: #b3261e;
+  color: #ffffff !important;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.row-menu-delete:hover { background: #8f1e18; }
+
+
+button.row-menu-delete {
+  color: #b3261e !important;
+  background: transparent !important;
+  opacity: 1 !important;
+  font-weight: 700 !important;
+}
+button.row-menu-delete:hover {
+  background: #fdecea !important;
 }

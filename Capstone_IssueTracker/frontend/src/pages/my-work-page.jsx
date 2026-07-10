@@ -6,6 +6,7 @@ import "./dashboard-page.css"
 function MyWorkPage() {
   const [myIssues, setMyIssues] = useState([])
   const [loading, setLoading] = useState(true)
+  const [message, setMessage] = useState("")
 
   useEffect(() => { fetchMyIssues() }, [])
 
@@ -13,7 +14,9 @@ function MyWorkPage() {
     try {
       const result = await getMyIssues()
       if (Array.isArray(result)) setMyIssues(result)
-    } catch (err) {}
+    } catch (err) {
+      setMessage("Failed to load your assigned issues. Please refresh the page.")
+    }
     setLoading(false)
   }
 
@@ -21,7 +24,9 @@ function MyWorkPage() {
     try {
       await updateIssueStatus(issueId, newStatus)
       fetchMyIssues()
-    } catch (err) {}
+    } catch (err) {
+      setMessage(err.message || "Failed to update status. Please try again.")
+    }
   }
 
   const statusColors = {
@@ -38,6 +43,8 @@ function MyWorkPage() {
             <p className="dashboard-subtitle">Issues currently assigned to you</p>
           </div>
         </div>
+
+        {message && <p className="dashboard-error">{message}</p>}
 
         <div className="dashboard-section">
           {loading ? (

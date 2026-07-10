@@ -155,3 +155,35 @@
 }
 .row-menu-dropdown button:hover { background: var(--color-bg); }
 .row-menu-delete { color: var(--color-danger) !important; }
+
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 16px;
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+.pagination-controls button {
+  padding: 6px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: var(--color-surface);
+  cursor: pointer;
+  font-size: 13px;
+}
+.pagination-controls button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+button.row-menu-delete {
+  color: #b3261e !important;
+  background: transparent !important;
+  opacity: 1 !important;
+  font-weight: 700 !important;
+}
+button.row-menu-delete:hover {
+  background: #fdecea !important;
+}
+
+
+.status-completed { background: #dcfce7; color: #16a34a; }
