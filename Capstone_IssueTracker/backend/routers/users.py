@@ -20,7 +20,12 @@ def register(user: UserRegister):
 
 @router.post("/login")
 def login(user: UserLogin):
-    """Login with email and password, returns JWT token"""
+    """Login and get JWT token
+    
+    - Checks email exists in database
+    - Verifies password against bcrypt hash
+    - Returns JWT token valid for 30 minutes
+    """
     return login_user(
         email=user.email,
         password=user.password
