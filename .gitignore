@@ -4,3 +4,12 @@ __pycache__/
 venv/
 student_data.txt
 student_data_copy.txt
+# Python virtual environment
+Capstone_IssueTracker/backend/venv/
+
+# Environment variables
+Capstone_IssueTracker/backend/.env
+
+# Python cache
+Capstone_IssueTracker/backend/**/__pycache__/
+Capstone_IssueTracker/frontend/node_modules/
