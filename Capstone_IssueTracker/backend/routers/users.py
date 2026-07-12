@@ -1,6 +1,7 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from schemas.user_schema import UserRegister, UserLogin, UserResponse
 from services.user_service import register_user, login_user
+from utils.dependencies import get_current_user, require_admin
 
 router = APIRouter(
     prefix="/api/users",
@@ -29,3 +30,17 @@ def login(user: UserLogin):
         email=user.email,
         password=user.password
     )
+
+@router.get("/me")
+def get_me(current_user: dict = Depends(get_current_user)):
+    """Get current logged-in user info - requires valid token"""
+    return {
+        "user_id": current_user.get("user_id"),
+        "email": current_user.get("email"),
+        "role": current_user.get("role")
+    }
+
+@router.get("/admin-only")
+def admin_only(current_user: dict = Depends(require_admin)):
+    """Test endpoint - only admin can access this"""
+    return {"message": f"Welcome Admin {current_user.get('email')}"}

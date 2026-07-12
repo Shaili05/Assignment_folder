@@ -23,3 +23,8 @@ def decode_access_token(token: str) -> dict:
         return payload
     except Exception:
         return None
+
+# Backward-compatible aliases — utils/dependencies.py (built on Day 4)
+# imports create_token/decode_token under these names
+create_token = create_access_token
+decode_token = decode_access_token

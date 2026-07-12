@@ -36,7 +36,6 @@ def get_user_by_email(email: str):
     user = users_collection.find_one({"email": email})
     if user:
         return
-    
 
 def login_user(email: str, password: str):
     """Login user and return JWT token"""
