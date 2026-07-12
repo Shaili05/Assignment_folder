@@ -11,5 +11,5 @@ Capstone_IssueTracker/backend/venv/
 Capstone_IssueTracker/backend/.env
 
 # Python cache
-Capstone_IssueTracker/backend/__pycache__/
 Capstone_IssueTracker/backend/**/__pycache__/
+Capstone_IssueTracker/frontend/node_modules/

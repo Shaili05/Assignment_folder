@@ -1,29 +1,30 @@
-import jwt
-import os
+from jose import jwt
 from datetime import datetime, timedelta
+import os
 from dotenv import load_dotenv
 
 load_dotenv()
 
-SECRET_KEY = os.getenv("SECRET_KEY", "fallback_secret_key")
+SECRET_KEY = os.getenv("JWT_SECRET", "mysecretkey123")
 ALGORITHM = "HS256"
-TOKEN_EXPIRE_MINUTES = 60
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
-def create_token(data: dict) -> str:
-    """Create a JWT token with user data and expiry"""
-    payload = data.copy()
-    expire = datetime.utcnow() + timedelta(minutes=TOKEN_EXPIRE_MINUTES)
-    payload["exp"] = expire
-    return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
+def create_access_token(data: dict) -> str:
+    """Create JWT token"""
+    to_encode = data.copy()
+    expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    to_encode.update({"exp": expire})
+    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
-def decode_token(token: str):
-    """Decode and verify JWT token, returns payload or None if invalid"""
+def decode_access_token(token: str) -> dict:
+    """Decode and verify JWT token"""
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         return payload
-    except jwt.ExpiredSignatureError:
+    except Exception:
         return None
-    except jwt.InvalidTokenError:
-        return None
-    
-create_access_token = create_token
+
+# Backward-compatible aliases — utils/dependencies.py (built on Day 4)
+# imports create_token/decode_token under these names
+create_token = create_access_token
+decode_token = decode_access_token
