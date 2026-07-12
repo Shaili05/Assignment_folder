@@ -1,4 +1,4 @@
-import { _get, _post } from "./api-manager"
+import { _get, _post, _patch } from "./api-manager"
 
 export async function registerUser(payload) {
   return _post("/users/register", payload)
@@ -22,4 +22,8 @@ export async function getIssues(projectId) {
 
 export async function createIssue(payload) {
   return _post("/issues/", payload, true)
+}
+
+export async function updateIssueStatus(issueId, status) {
+  return _patch(`/issues/${issueId}/status`, { status }, true)
 }

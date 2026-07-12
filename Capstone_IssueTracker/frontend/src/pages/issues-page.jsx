@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react"
 import { useNavigate, useSearchParams } from "react-router-dom"
-import { getIssues, createIssue } from "../services/api"
+import { getIssues, createIssue, updateIssueStatus } from "../services/api"
 import "./issues-page.css"
 
 function IssuesPage() {
@@ -46,6 +46,15 @@ function IssuesPage() {
     }
   }
 
+  async function handleStatusUpdate(issueId, newStatus) {
+    try {
+      await updateIssueStatus(issueId, newStatus)
+      fetchIssues()
+    } catch (err) {
+      setMessage(err.message || "Failed to update status")
+    }
+  }
+
   const statusColors = {
     BACKLOG: "#94a3b8",
     TODO: "#60a5fa",
@@ -77,29 +86,46 @@ function IssuesPage() {
         </select>
         <button className="issues-button" onClick={handleCreate}>Create Issue</button>
         {message && (
-  <p className={`issues-message ${message.includes("required") || message.includes("Failed") ? "issues-error" : ""}`}>
-    {message}
-  </p>
-)}
+          <p className={`issues-message ${message.includes("required") || message.includes("Failed") ? "issues-error" : ""}`}>
+            {message}
+          </p>
+        )}
       </div>
 
       <div className="issues-list">
         <h3>All Issues</h3>
         {loading ? <p>Loading...</p> : issues.length === 0 ? <p>No issues yet.</p> : (
-          issues.map(issue => (
-            <div key={issue.id} className="issue-card">
-              <div className="issue-card-top">
-                <span className="issue-title">{issue.title}</span>
-                <span className="issue-status" style={{ backgroundColor: statusColors[issue.status] || "#94a3b8" }}>
-                  {issue.status}
-                </span>
+          issues.map(issue => {
+            const nextStatus = {
+              BACKLOG: "TODO",
+              TODO: "IN_PROGRESS",
+              IN_PROGRESS: "DONE",
+              DONE: null
+            }[issue.status]
+
+            return (
+              <div key={issue.id} className="issue-card">
+                <div className="issue-card-top">
+                  <span className="issue-title">{issue.title}</span>
+                  <span className="issue-status" style={{ backgroundColor: statusColors[issue.status] || "#94a3b8" }}>
+                    {issue.status}
+                  </span>
+                </div>
+                <div className="issue-card-bottom">
+                  <span className="issue-type">{issue.issue_type}</span>
+                  <span className="issue-priority">Priority: {issue.priority}</span>
+                  {nextStatus && (
+                    <button
+                      className="status-btn"
+                      onClick={() => handleStatusUpdate(issue.id, nextStatus)}
+                    >
+                      Move to {nextStatus.replace("_", " ")}
+                    </button>
+                  )}
+                </div>
               </div>
-              <div className="issue-card-bottom">
-                <span className="issue-type">{issue.issue_type}</span>
-                <span className="issue-priority">Priority: {issue.priority}</span>
-              </div>
-            </div>
-          ))
+            )
+          })
         )}
       </div>
     </div>

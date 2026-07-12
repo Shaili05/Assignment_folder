@@ -38,3 +38,40 @@ def get_issue_by_id(issue_id: str):
     if not issue:
         raise HTTPException(status_code=404, detail="Issue not found")
     return issue_helper(issue)
+
+
+VALID_TRANSITIONS = {
+    "BACKLOG": ["TODO"],
+    "TODO": ["IN_PROGRESS"],
+    "IN_PROGRESS": ["DONE"],
+    "DONE": []
+}
+
+def update_issue_status(issue_id: str, new_status: str, current_user_id: str):
+    try:
+        issue = issues_collection.find_one({"_id": ObjectId(issue_id)})
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid issue_id format")
+    
+    if not issue:
+        raise HTTPException(status_code=404, detail="Issue not found")
+    
+    # Check assignee
+    if issue.get("assignee_id") and issue.get("assignee_id") != current_user_id:
+        raise HTTPException(status_code=403, detail="Only the assignee can update issue status")
+    
+    current_status = issue["status"]
+    allowed = VALID_TRANSITIONS.get(current_status, [])
+    
+    if new_status not in allowed:
+        raise HTTPException(
+            status_code=409,
+            detail=f"Invalid transition: {current_status} → {new_status}"
+        )
+    
+    issues_collection.update_one(
+        {"_id": ObjectId(issue_id)},
+        {"$set": {"status": new_status}}
+    )
+    updated = issues_collection.find_one({"_id": ObjectId(issue_id)})
+    return issue_helper(updated)
