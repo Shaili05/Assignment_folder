@@ -1,8 +1,12 @@
 import pytest
+import base64
+
+def b64(s):
+    return base64.b64encode(s.encode()).decode()
 
 # Test 1: Access /me without token - should be blocked
 def test_get_me_without_token(client):
-    """No token provided - should return 403"""
+    """No token provided - should return 401"""
     response = client.get("/api/users/me")
     assert response.status_code == 401
 
@@ -13,13 +17,13 @@ def test_get_me_with_valid_token(client):
     client.post("/api/users/register", json={
         "name": "Auth Test User",
         "email": "authtest@example.com",
-        "password": "Test@123",
+        "password": b64("Test@123"),
         "role": "member"
     })
     # Then login to get token
     login_response = client.post("/api/users/login", json={
         "email": "authtest@example.com",
-        "password": "Test@123"
+        "password": b64("Test@123")
     })
     token = login_response.json()["access_token"]
 
@@ -38,13 +42,13 @@ def test_admin_endpoint_blocked_for_member(client):
     client.post("/api/users/register", json={
         "name": "Member User",
         "email": "member@example.com",
-        "password": "Test@123",
+        "password": b64("Test@123"),
         "role": "member"
     })
     # Login
     login_response = client.post("/api/users/login", json={
         "email": "member@example.com",
-        "password": "Test@123"
+        "password": b64("Test@123")
     })
     token = login_response.json()["access_token"]
 
@@ -62,13 +66,13 @@ def test_admin_endpoint_accessible_for_admin(client):
     client.post("/api/users/register", json={
         "name": "Admin User",
         "email": "admin@example.com",
-        "password": "Test@123",
+        "password": b64("Test@123"),
         "role": "admin"
     })
     # Login
     login_response = client.post("/api/users/login", json={
         "email": "admin@example.com",
-        "password": "Test@123"
+        "password": b64("Test@123")
     })
     token = login_response.json()["access_token"]
 
@@ -81,7 +85,7 @@ def test_admin_endpoint_accessible_for_admin(client):
 
 # Test 5: Invalid token - should be blocked
 def test_get_me_with_invalid_token(client):
-    """Fake token - should return 403"""
+    """Fake token - should return 401"""
     response = client.get(
         "/api/users/me",
         headers={"Authorization": "Bearer faketoken123"}
