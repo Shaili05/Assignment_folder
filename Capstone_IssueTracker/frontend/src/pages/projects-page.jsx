@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react"
+import { useNavigate } from "react-router-dom"
 import { getProjects, createProject } from "../services/api"
 
-function ProjectsPage({ onNavigate }) {
+function ProjectsPage() {
+  const navigate = useNavigate()
   const [projects, setProjects] = useState([])
   const [name, setName] = useState("")
   const [description, setDescription] = useState("")
@@ -9,30 +11,28 @@ function ProjectsPage({ onNavigate }) {
   const [message, setMessage] = useState("")
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    fetchProjects()
-  }, [])
+  useEffect(() => { fetchProjects() }, [])
 
   async function fetchProjects() {
-    const token = localStorage.getItem("token")
-    const result = await getProjects(token)
-    if (Array.isArray(result)) {
-      setProjects(result)
+    try {
+      const result = await getProjects()
+      if (Array.isArray(result)) setProjects(result)
+    } catch (err) {
+      setMessage("Failed to load projects")
     }
     setLoading(false)
   }
 
   async function handleCreate() {
-    const token = localStorage.getItem("token")
-    const result = await createProject({ name, description, project_key: projectKey }, token)
-    if (result.id) {
+    try {
+      await createProject({ name, description, project_key: projectKey, members: [] })
       setMessage("Project created successfully!")
       setName("")
       setDescription("")
       setProjectKey("")
       fetchProjects()
-    } else {
-      setMessage(result.detail || "Failed to create project")
+    } catch (err) {
+      setMessage(err.message || "Failed to create project")
     }
   }
 
@@ -40,10 +40,7 @@ function ProjectsPage({ onNavigate }) {
     <div style={styles.container}>
       <div style={styles.header}>
         <h2>Projects</h2>
-        <button style={styles.logoutBtn} onClick={() => {
-          localStorage.removeItem("token")
-          onNavigate("login")
-        }}>Logout</button>
+        <button style={styles.logoutBtn} onClick={() => { localStorage.removeItem("token"); navigate("/login") }}>Logout</button>
       </div>
 
       <div style={styles.form}>
@@ -60,9 +57,12 @@ function ProjectsPage({ onNavigate }) {
         {loading ? <p>Loading...</p> : projects.length === 0 ? <p>No projects yet.</p> : (
           projects.map(project => (
             <div key={project.id} style={styles.card}>
-              <strong>{project.name}</strong>
-              <span style={styles.key}>[{project.project_key}]</span>
-              <p>{project.description}</p>
+              <div style={styles.cardLeft}>
+                <strong>{project.name}</strong>
+                <span style={styles.key}>[{project.project_key}]</span>
+                <p style={{ fontSize: "13px", color: "#64748b" }}>{project.description}</p>
+              </div>
+              <button style={styles.issueBtn} onClick={() => navigate(`/issues?project_id=${project.id}`)}>View Issues</button>
             </div>
           ))
         )}
@@ -80,8 +80,10 @@ const styles = {
   logoutBtn: { padding: "8px 16px", backgroundColor: "#ef4444", color: "#fff", border: "none", borderRadius: "4px", cursor: "pointer" },
   message: { color: "green", textAlign: "center" },
   list: { backgroundColor: "#fff", padding: "20px", borderRadius: "8px", boxShadow: "0 2px 10px rgba(0,0,0,0.1)" },
-  card: { padding: "12px", borderBottom: "1px solid #eee", display: "flex", gap: "10px", alignItems: "center" },
-  key: { backgroundColor: "#e0e7ff", color: "#4f46e5", padding: "2px 8px", borderRadius: "4px", fontSize: "12px" }
+  card: { padding: "12px", borderBottom: "1px solid #eee", display: "flex", justifyContent: "space-between", alignItems: "center" },
+  cardLeft: { display: "flex", flexDirection: "column", gap: "4px" },
+  key: { backgroundColor: "#e0e7ff", color: "#4f46e5", padding: "2px 8px", borderRadius: "4px", fontSize: "12px", width: "fit-content" },
+  issueBtn: { padding: "8px 14px", backgroundColor: "#4f46e5", color: "#fff", border: "none", borderRadius: "4px", cursor: "pointer", fontSize: "13px" }
 }
 
 export default ProjectsPage

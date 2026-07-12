@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routers import users
+from routers import users, projects, issues
 
 app = FastAPI(
     title="Issue & Sprint Management System",
@@ -17,8 +17,8 @@ app.add_middleware(
 )
 
 app.include_router(users.router)
-from routers import projects
 app.include_router(projects.router)
+app.include_router(issues.router)
 
 @app.get("/")
 def health_check():
