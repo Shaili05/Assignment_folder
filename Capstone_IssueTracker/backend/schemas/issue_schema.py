@@ -26,6 +26,7 @@ class IssueCreate(BaseModel):
     priority: IssuePriority = IssuePriority.medium
     project_id: str
     assignee_id: Optional[str] = None
+    parent_id: Optional[str] = None
 
 class IssueResponse(BaseModel):
     id: str
@@ -37,3 +38,13 @@ class IssueResponse(BaseModel):
     project_id: str
     assignee_id: Optional[str]
     created_by: str
+    parent_id: Optional[str] = None
+
+class AssigneeUpdate(BaseModel):
+    assignee_id: str
+
+
+class IssueUpdate(BaseModel):
+    description: str
+    priority: str
+    issue_type: str

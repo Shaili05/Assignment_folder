@@ -25,3 +25,21 @@ class UserResponse(BaseModel):
     name: str
     email: str
     role: str
+
+    
+class RoleUpdate(BaseModel):
+    role: UserRole
+
+class UserListItem(BaseModel):
+    id: str
+    name: str
+    email: str
+    role: str#
+
+
+class ProfileUpdate(BaseModel):
+    name: str
+
+class PasswordChange(BaseModel):
+    current_password: str
+    new_password: str
