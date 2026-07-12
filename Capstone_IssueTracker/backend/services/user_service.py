@@ -44,7 +44,8 @@ def get_user_by_email(email: str):
     if user:
         return user_helper(user)
     return None
-    
+
+
 
 def login_user(payload: UserLogin):
     """Login user and return JWT token - takes the full schema object"""

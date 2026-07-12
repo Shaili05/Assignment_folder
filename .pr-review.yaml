@@ -1,0 +1,24 @@
+settings:
+  max_comments_per_review: 15
+  post_on_clean_pr: true
+  excluded_files:
+    - "*.md"
+    - "*.lock"
+    - "migrations/*"
+
+rules:
+  - id: no_hardcoded_secrets
+    enabled: true
+    severity: SECURITY
+    title: No hardcoded secrets or credentials
+    details: >
+      Flag any hardcoded API keys, passwords, tokens, or connection strings.
+      The fix must use an environment variable reference instead.
+
+  - id: no_print_statements
+    enabled: true
+    severity: CODE_QUALITY
+    title: No print() in production code
+    details: >
+      Flag any print() calls in non-test files.
+      Replace with the project logger at the appropriate log level.

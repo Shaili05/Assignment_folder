@@ -20,7 +20,6 @@ def register(user: UserRegister):
 def login(user: UserLogin):
     """Login with email and password, returns JWT token"""
     return login_user(user)
-
 @router.get("/me")
 def get_me(current_user: dict = Depends(get_current_user)):
     """Get current logged-in user's full profile info"""
