@@ -35,9 +35,12 @@ def list_all_issues(
     search: str = None,
     status: str = None,
     assignee_id: str = None,
+    skip: int = 0,
+    limit: int = 0,
     current_user: dict = Depends(get_current_user)
 ):
-    return get_issues_filtered(current_user, project_id, search, status, assignee_id)    
+    return get_issues_filtered(current_user, project_id, search, status, assignee_id, skip, limit)
+    
 
 @router.get("/my-issues")
 def list_my_issues(current_user: dict = Depends(get_current_user)):

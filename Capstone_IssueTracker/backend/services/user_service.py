@@ -76,9 +76,13 @@ def login_user(payload: UserLogin):
     }
 
 
-def get_all_users():
-    """Return all users - admin only, used for role management and member assignment"""
-    users = users_collection.find()
+def get_all_users(skip: int = 0, limit: int = 0):
+    """Return all users - admin only, used for role management and member assignment.
+    Supports pagination via skip/limit; limit=0 means no limit (backward compatible)."""
+    cursor = users_collection.find().skip(skip)
+    if limit > 0:
+        cursor = cursor.limit(limit)
+    users = cursor
     return [
         {"id": str(u["_id"]), "name": u["name"], "email": u["email"], "role": u["role"]}
         for u in users

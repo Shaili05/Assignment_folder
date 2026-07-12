@@ -39,15 +39,18 @@ def create_project(payload: ProjectCreate, owner_id: str):
     return project_helper(new_project)
 
 
-def get_all_projects(current_user: dict):
-    """Admin and Viewer see all projects. Member sees only projects they belong to."""
+def get_all_projects(current_user: dict, skip: int = 0, limit: int = 0):
+    """Admin and Viewer see all projects. Member sees only projects they belong to.
+    Optional pagination via skip/limit."""
     role = current_user.get("role")
     if role in ("admin", "viewer"):
-        projects = projects_collection.find()
+        cursor = projects_collection.find().skip(skip)
     else:
         user_id = current_user.get("user_id")
-        projects = projects_collection.find({"members": user_id})
-    return [project_helper(p) for p in projects]
+        cursor = projects_collection.find({"members": user_id}).skip(skip)
+    if limit > 0:
+        cursor = cursor.limit(limit)
+    return [project_helper(p) for p in cursor]
 
 
 def get_project_members(project_id: str):

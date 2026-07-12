@@ -165,7 +165,7 @@ def get_issue_stats():
     return {"total_issues": total, "open_issues": open_count}
 
 
-def get_issues_filtered(current_user, project_id=None, search=None, status=None, assignee_id=None):
+def get_issues_filtered(current_user, project_id=None, search=None, status=None, assignee_id=None, skip: int = 0, limit: int = 0):
     from services.project_service import get_all_projects
     accessible = get_all_projects(current_user)
     accessible_ids = [p["id"] for p in accessible]
@@ -188,5 +188,7 @@ def get_issues_filtered(current_user, project_id=None, search=None, status=None,
             {"title": {"$regex": search, "$options": "i"}},
             {"description": {"$regex": search, "$options": "i"}}
         ]
-    issues = issues_collection.find(query)
-    return [issue_helper(i) for i in issues]
+    cursor = issues_collection.find(query).skip(skip)
+    if limit > 0:
+        cursor = cursor.limit(limit)
+    return [issue_helper(i) for i in cursor]

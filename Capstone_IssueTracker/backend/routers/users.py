@@ -41,9 +41,9 @@ def admin_only(current_user: dict = Depends(require_admin)):
     return {"message": f"Welcome Admin {current_user.get('email')}"}
 
 @router.get("/")
-def list_users(current_user: dict = Depends(require_admin)):
-    """List all users - admin only"""
-    return get_all_users()
+def list_users(skip: int = 0, limit: int = 0, current_user: dict = Depends(require_admin)):
+    """List all users - admin only. Optional pagination: ?skip=0&limit=20"""
+    return get_all_users(skip, limit)
 
 @router.patch("/{user_id}/role")
 def change_user_role(user_id: str, payload: RoleUpdate, current_user: dict = Depends(require_admin)):

@@ -1,8 +1,8 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import List, Optional
 
 class ProjectCreate(BaseModel):
-    name: str
+    name: str = Field(..., min_length=1)
     description: str
     members: Optional[List[str]] = []
 

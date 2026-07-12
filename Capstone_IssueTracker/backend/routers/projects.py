@@ -19,9 +19,9 @@ def create_new_project(project: ProjectCreate, current_user: dict = Depends(requ
 
 
 @router.get("/")
-def list_projects(current_user: dict = Depends(get_current_user)):
-    """Get projects - admin sees all, member/viewer see only assigned ones"""
-    return get_all_projects(current_user)
+def list_projects(skip: int = 0, limit: int = 0, current_user: dict = Depends(get_current_user)):
+    """Get projects - admin sees all, member/viewer see only assigned ones. Optional pagination."""
+    return get_all_projects(current_user, skip, limit)
 
 @router.post("/{project_id}/members/{user_id}")
 def add_project_member(project_id: str, user_id: str, current_user: dict = Depends(require_admin)):
