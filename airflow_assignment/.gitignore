@@ -1,0 +1,20 @@
+logs/
+plugins/
+config/
+
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+airflow.cfg
+airflow.db
+webserver_config.py
+standalone_admin_password.txt
+
+.DS_Store
+.vscode/
