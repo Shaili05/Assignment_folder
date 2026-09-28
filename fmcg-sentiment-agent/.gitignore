@@ -1,0 +1,18 @@
+﻿# Secrets
+.env
+!.env.example
+/config/
+
+# Python and environment
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Editor and tool folders
+.vscode/
+.streamlit/
+
+# Data and runtime output
+data/
+logs/
