@@ -1,0 +1,121 @@
+review_id,llm_sentiment,llm_aspects,llm_issue
+5191,positive,texture_effectiveness,none
+3779,positive,texture_effectiveness,none
+1592,negative,"packaging, price, texture_effectiveness",none
+4274,positive,texture_effectiveness,none
+3571,positive,texture_effectiveness,none
+3550,positive,"packaging, texture_effectiveness",none
+3059,positive,texture_effectiveness,none
+3555,neutral,"texture_effectiveness, price",safety
+2508,positive,texture_effectiveness,none
+5434,negative,texture_effectiveness,none
+3229,negative,texture_effectiveness,none
+528,positive,texture_effectiveness,none
+4478,negative,packaging,quality
+540,positive,texture_effectiveness,none
+1593,positive,"texture_effectiveness, price",none
+3900,positive,"texture_effectiveness, price",none
+1418,negative,texture_effectiveness,none
+4206,negative,texture_effectiveness,quality
+3030,positive,texture_effectiveness,none
+794,negative,texture_effectiveness,safety
+529,positive,texture_effectiveness,none
+4317,positive,"texture_effectiveness, packaging",none
+1511,positive,texture_effectiveness,none
+376,negative,"price, texture_effectiveness",safety
+54,positive,"availability, texture_effectiveness",none
+161,positive,texture_effectiveness,none
+5768,neutral,texture_effectiveness,none
+5309,negative,texture_effectiveness,none
+456,negative,texture_effectiveness,safety
+337,negative,texture_effectiveness,safety
+5905,positive,texture_effectiveness,none
+3703,positive,"texture_effectiveness, price",none
+619,neutral,"texture_effectiveness, price",none
+1683,negative,texture_effectiveness,safety
+826,positive,texture_effectiveness,none
+93,negative,texture_effectiveness,none
+4235,positive,texture_effectiveness,none
+5750,positive,texture_effectiveness,none
+4244,negative,texture_effectiveness,none
+4664,neutral,texture_effectiveness,none
+4808,positive,texture_effectiveness,none
+5805,positive,texture_effectiveness,none
+1580,positive,"price, texture_effectiveness",none
+3501,positive,texture_effectiveness,none
+5584,negative,texture_effectiveness,safety
+315,negative,texture_effectiveness,safety
+5318,negative,texture_effectiveness,none
+5776,positive,texture_effectiveness,none
+2733,positive,"packaging, texture_effectiveness",none
+2163,positive,"price, packaging, texture_effectiveness",none
+27,positive,texture_effectiveness,none
+1158,positive,texture_effectiveness,none
+4489,neutral,"texture_effectiveness, price",safety
+2379,positive,texture_effectiveness,none
+5532,positive,texture_effectiveness,none
+4807,neutral,"texture_effectiveness, price",none
+3704,negative,texture_effectiveness,safety
+2949,positive,"texture_effectiveness, price",none
+5129,negative,texture_effectiveness,safety
+5151,positive,price,none
+3519,negative,texture_effectiveness,safety
+3897,positive,"texture_effectiveness, price",none
+3226,positive,texture_effectiveness,none
+3924,negative,texture_effectiveness,safety
+5985,negative,texture_effectiveness,none
+1120,neutral,texture_effectiveness,safety
+4531,positive,texture_effectiveness,none
+985,negative,texture_effectiveness,safety
+83,negative,packaging,quality
+4282,neutral,texture_effectiveness,none
+2931,positive,texture_effectiveness,none
+1636,neutral,"price, texture_effectiveness",none
+848,negative,texture_effectiveness,none
+1905,negative,"texture_effectiveness, price",safety
+5861,negative,texture_effectiveness,none
+119,positive,texture_effectiveness,none
+1107,positive,"price, texture_effectiveness",none
+2714,positive,texture_effectiveness,none
+2967,negative,texture_effectiveness,safety
+4065,positive,texture_effectiveness,none
+5463,neutral,texture_effectiveness,quality
+5745,positive,texture_effectiveness,none
+9,negative,"packaging, texture_effectiveness",none
+3021,positive,texture_effectiveness,none
+589,neutral,texture_effectiveness,none
+1619,positive,texture_effectiveness,none
+4452,positive,texture_effectiveness,none
+5997,positive,texture_effectiveness,none
+4349,negative,texture_effectiveness,none
+5305,positive,texture_effectiveness,none
+309,positive,texture_effectiveness,none
+3316,positive,texture_effectiveness,none
+742,negative,texture_effectiveness,none
+5774,positive,texture_effectiveness,none
+4620,positive,texture_effectiveness,none
+3292,negative,texture_effectiveness,none
+3266,positive,"price, texture_effectiveness",none
+4256,positive,"price, texture_effectiveness",none
+1455,negative,texture_effectiveness,none
+1754,negative,texture_effectiveness,none
+520,positive,texture_effectiveness,none
+2323,positive,"price, texture_effectiveness",none
+4471,negative,"price, packaging, texture_effectiveness",none
+5960,positive,texture_effectiveness,none
+1908,negative,texture_effectiveness,none
+4691,positive,texture_effectiveness,none
+4099,neutral,"packaging, texture_effectiveness",quality
+1211,negative,texture_effectiveness,none
+4771,positive,texture_effectiveness,none
+1462,neutral,packaging,quality
+1967,negative,texture_effectiveness,safety
+1354,negative,"price, texture_effectiveness",none
+469,positive,texture_effectiveness,none
+3419,positive,"packaging, texture_effectiveness",none
+931,negative,texture_effectiveness,safety
+5992,negative,"price, texture_effectiveness",none
+2339,negative,price,none
+4755,negative,texture_effectiveness,none
+5402,positive,texture_effectiveness,none
+69,negative,packaging,quality

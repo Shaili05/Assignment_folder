@@ -1,0 +1,200 @@
+RAG Answer Comparison Report
+========================================
+
+What do customers most commonly complain about regarding packaging?
+-------------------------------------------------------------------
+Model: sentence-t5-base | Store: chroma | Time: 1.28s
+Customers repeatedly criticize the packaging for being poorly designed and unreliable. One reviewer says the balm’s packaging is “the worst” and requires pliers to open, while another notes that the tube “began to split open” and the salve “would squirt out the split.” A third comment calls Sephora’s packaging “a lie,” pointing out that the full‑size product is a pump rather than the jar‑like sample they expected. These excerpts show that the most common packaging complaints revolve around difficulty opening, breakage, and misleading presentation.
+
+Model: sentence-t5-base | Store: faiss | Time: 0.83s
+Customers repeatedly criticize the packaging for being difficult to use and poorly constructed. One reviewer says they need pliers and help from a spouse just to open the balm, while another notes that the tube splits open and the product squirts out. A third reviewer calls the packaging “a lie,” complaining that the product is marketed as a jar but arrives as a pump with a misleading amount of product. These excerpts show that the most common packaging complaints revolve around inconvenient opening, breakage, and deceptive design.
+
+Model: BAAI/bge-large-en | Store: chroma | Time: 1.06s
+Customers repeatedly criticize the packaging for being difficult to use. Reviewers mention having to resort to pliers, being unable to get their fingers into jars, and experiencing splits that cause the product to squirt out. They also note that the new pump or tube designs feel misleading compared to the original jars and add unnecessary weight for travel.
+
+Model: BAAI/bge-large-en | Store: faiss | Time: 0.8s
+Customers repeatedly criticize the packaging for being hard to use. Reviewers mention having to resort to pliers, being unable to get their fingers into jars, and experiencing splits that cause the product to squirt out. They also note that new designs (e.g., pumps or tubes) differ from the original containers and feel less functional, and that heavy, weighted jars add inconvenience for travel.
+
+Model: intfloat/e5-small-v2 | Store: chroma | Time: 0.88s
+Customers repeatedly criticize packaging that is difficult to open or use, such as a balm that requires pliers and a salve tube that splits open and leaks. They also complain about misleading or inconsistent packaging, noting that a sample jar appeared larger than the full‑size pump and that the product’s presentation does not match what is advertised. These issues—poor functionality and deceptive design—are the most common packaging grievances in the excerpts.
+
+Model: intfloat/e5-small-v2 | Store: faiss | Time: 0.62s
+Customers repeatedly criticize packaging that is difficult to use or unreliable. One reviewer says they need pliers to open the balm, another notes that the full‑size jar’s pump looks like the sample jar but contains less product, and a third complains that a new tube split open and leaked the salve. These excerpts show that the most common complaint is poor, inconvenient or misleading packaging design.
+
+Model: paraphrase-multilingual-MiniLM-L12-v2 | Store: chroma | Time: 1.08s
+Customers most commonly complain that the packaging is difficult to open, to the point where they feel they need tools such as pliers to access the product. This frustration is highlighted in the negative review that calls the packaging “the worst” and mentions having to use pliers each time they use the balm.
+
+Model: paraphrase-multilingual-MiniLM-L12-v2 | Store: faiss | Time: 1.2s
+Customers most commonly complain that the packaging is difficult to open, to the point where they need tools such as pliers to access the product. This frustration is highlighted in the negative review that calls the packaging “the worst” and says they shouldn’t have to use pliers each time they use it. No other excerpt mentions a packaging problem.
+
+Model: all-MiniLM-L6-v2 | Store: chroma | Time: 1.36s
+Customers frequently criticize the packaging for being difficult to use, with one reviewer noting they need pliers and assistance every time they open the product. They also complain that the packaging can be misleading, as one reviewer observed that the full‑size jar contains less product than the sample and that the design (a pump versus a jar) does not match expectations.
+
+Model: all-MiniLM-L6-v2 | Store: faiss | Time: 1.04s
+Customers most often criticize the packaging for being inconvenient and misleading. One reviewer says the container is so hard to open that they need pliers and assistance every time they use it. Another reviewer claims the packaging “is a lie,” noting that the full‑size pump jar holds less product than the sample jar and looks different from what was promised. These comments indicate that difficulty of access and inaccurate representation of product quantity are the primary packaging complaints.
+
+
+Are customers generally happy with the price of these products?
+---------------------------------------------------------------
+Model: sentence-t5-base | Store: chroma | Time: 0.92s
+Yes, the reviewers express overall satisfaction with the price. Several customers acknowledge that the products are pricey but consider them worth the cost—one says “Yes its pricey, but it is definitely worth it,” another notes they “would pay” despite the price, and a fourth adds “you’re getting what you pay for.” Even the 4‑star reviewer does not criticize the price, focusing instead on the product’s scent and performance. Thus, the sentiment toward price is generally positive.
+
+Model: sentence-t5-base | Store: faiss | Time: 0.57s
+The excerpts indicate that customers are satisfied with the price despite acknowledging that the products are expensive. Reviewers repeatedly describe the cost as “pricey” but say it is “definitely worth it,” “well worth the price,” and that they would “pay” for the quality. Even the four‑star reviewer notes the price but still finds the product good overall. Thus, overall sentiment toward price is positive, with customers feeling the higher cost is justified.
+
+Model: BAAI/bge-large-en | Store: chroma | Time: 0.76s
+The excerpts show mixed feelings about price. One reviewer praises Clinique’s value and calls the product “nearly perfect,” while another says the product “has helped me so much” but does not comment on cost. Two other reviewers explicitly question the price, noting that cheaper alternatives give similar results and that the product isn’t worth its cost. Overall, customers are not uniformly happy with the price; some see good value, but several consider it too expensive for the benefits.
+
+Model: BAAI/bge-large-en | Store: faiss | Time: 0.57s
+The excerpts show mixed feelings about price. One reviewer praises Clinique’s overall value, while another notes the product works but doubts they would repurchase at the same cost. A third reviewer feels the price isn’t justified because cheaper alternatives give similar results, and a fourth is disappointed with the value‑size packaging. Overall, customers are not uniformly happy with the price; satisfaction varies.
+
+Model: intfloat/e5-small-v2 | Store: chroma | Time: 0.82s
+The excerpts indicate that most reviewers are pleased with the price, describing it as “small,” “can’t beat that price,” and “well worth the price.” One reviewer, however, notes that the cost is a factor that would prevent them from repurchasing. Overall, customers appear generally happy with the price, though at least one finds it a drawback.
+
+Model: intfloat/e5-small-v2 | Store: faiss | Time: 0.94s
+The excerpts show that most reviewers are pleased with the price: one calls it “unbeatable” and another says the product is “well worth the price” for its small cost. A third reviewer notes the product is free, but adds that “because of the cost won’t repurchase,” indicating a price concern. Overall, customers generally express happiness with the price, though at least one reviewer finds it too expensive to buy again.
+
+Model: paraphrase-multilingual-MiniLM-L12-v2 | Store: chroma | Time: 0.84s
+The excerpts show mixed sentiment about price. Two reviewers say the product feels pricey—a “luxury” item that they struggle with and a “splurge” that may not be worth the cost—while two others praise the value, noting a “decent size for a small price” and that it is “well worth the price.” Therefore, customers are not uniformly happy with the price; opinions are divided.
+
+Model: paraphrase-multilingual-MiniLM-L12-v2 | Store: faiss | Time: 0.87s
+The excerpts show mixed reactions to price. One reviewer calls the product a “luxury item” and says they “struggle with the price,” while another says it “doesn’t feel worth the money.” In contrast, two reviewers describe the cost as “decent” or “well worth the price,” indicating satisfaction. Overall, customers are not uniformly happy with the price; some find it high, but others feel it offers good value.
+
+Model: all-MiniLM-L6-v2 | Store: chroma | Time: 0.85s
+The excerpts show that while several reviewers note the products are “pricey” or “a little pricey,” they also say the cost is justified because the items work well, last long, or deliver results they value. One reviewer says the product is “definitely worth it,” another mentions “a little goes a long way,” and another is willing to “pay” despite the price. Thus, customers appear generally satisfied with the price relative to the benefits they receive.
+
+Model: all-MiniLM-L6-v2 | Store: faiss | Time: 0.61s
+The excerpts repeatedly note that the products are “a little pricey” or “definitely worth it,” yet reviewers express satisfaction and willingness to pay. One user says the price is high but the product is worth it for acne‑prone skin, another mentions that a little goes a long way and it reduces oiliness, and another says they would still pay despite the cost. Overall, customers appear happy with the price because they feel the benefits justify the expense.
+
+
+What safety concerns have customers reported about these products?
+------------------------------------------------------------------
+Model: sentence-t5-base | Store: chroma | Time: 0.71s
+One reviewer warned that after about a month of use they developed red, swollen, burning, and puffiness under their eyes, which was noticeable to coworkers. This indicates a potential irritation or adverse reaction to the eye‑cream. No other safety issues are mentioned in the provided excerpts.
+
+Model: sentence-t5-base | Store: faiss | Time: 0.75s
+One reviewer warned that after about a month of use the eye cream caused red, swollen, burning and puffiness under the eyes, which was noticeable to coworkers and described as a severe reaction. No other safety issues are mentioned in the remaining excerpts.
+
+Model: BAAI/bge-large-en | Store: chroma | Time: 0.79s
+Customers have reported skin‑irritation issues with the cleanser, noting immediate redness (“flushed red”) and subsequent flakiness on sensitive skin. One reviewer also described an adverse reaction to the scrub cleanser despite having never reacted to other products before. No other safety concerns are mentioned in the excerpts.
+
+Model: BAAI/bge-large-en | Store: faiss | Time: 1.08s
+Customers have reported skin irritation as a safety concern. One reviewer said the product caused immediate redness and made their sensitive skin become flaky, while another noted an adverse reaction that was unusual for their normally tolerant skin. These accounts suggest the cleanser may provoke irritation or allergic‑type responses in some users.
+
+Model: intfloat/e5-small-v2 | Store: chroma | Time: 0.91s
+Customers have reported that the product can cause skin breakouts, even for people who do not consider their skin sensitive. One reviewer who tried a sample said their skin “started breaking out and hasn’t fully recovered yet,” and another indicated they experienced a negative reaction after using the product despite having non‑sensitive skin. No other safety‑related issues are mentioned in the excerpts.
+
+Model: intfloat/e5-small-v2 | Store: faiss | Time: 0.96s
+Customers have reported that the product can cause skin breakouts, with one reviewer noting that after just a couple of uses their skin began breaking out and had not fully recovered. Another reviewer, despite not having sensitive skin, implied a negative reaction by stating they “have not broken o…,” suggesting concerns about irritation or adverse effects. No other safety‑related issues (such as allergic reactions or severe irritation) were mentioned in the excerpts.
+
+Model: paraphrase-multilingual-MiniLM-L12-v2 | Store: chroma | Time: 0.93s
+The excerpts do not contain any mention of safety concerns such as irritation, allergic reactions, or adverse effects. The sole negative comment focuses on the product’s perceived lack of efficacy, not on any safety issue.
+
+Model: paraphrase-multilingual-MiniLM-L12-v2 | Store: faiss | Time: 0.79s
+The excerpts do not mention any safety concerns such as irritation, allergic reactions, or adverse effects. The only negative comment focuses on the product’s perceived lack of efficacy, not on safety. Therefore, based on the provided reviews, no safety issues have been reported.
+
+Model: all-MiniLM-L6-v2 | Store: chroma | Time: 0.76s
+One reviewer reported a serious adverse reaction, describing red, swollen, burning and puffiness under the eyes after about a month of use, which was noticeable to coworkers. No other excerpts mention safety issues.
+
+Model: all-MiniLM-L6-v2 | Store: faiss | Time: 0.85s
+One customer reported a serious adverse reaction, describing red, swollen, burning and puffiness under the eyes after about a month of use, which was noticeable to coworkers despite not having sensitive or reactive skin. No other safety concerns are mentioned in the provided excerpts.
+
+
+How effective do customers find these products for their skin?
+--------------------------------------------------------------
+Model: sentence-t5-base | Store: chroma | Time: 0.71s
+Customers describe the products as highly effective, noting visible improvements such as a less‑dull complexion, faded scars, and healthier‑looking skin after regular use. Reviewers also highlight a pleasant, gentle exfoliation that removes dead cells without leaving the skin tight or dry, and a light, luxurious texture that absorbs well. Several users say the results feel immediate (a slight tingle) and are strong enough that they would continue purchasing despite the price.
+
+Model: sentence-t5-base | Store: faiss | Time: 1.03s
+Customers describe the products as highly effective, noting visible improvements such as a less‑dull complexion, faded scars, and healthier‑looking skin after regular use. Reviewers also highlight the pleasant, gentle exfoliation and a light, luxurious texture that absorbs well without leaving the skin tight or dry. Several users say they feel a slight tingle that reassures them the product is working, and they would even pay a premium price for the results.
+
+Model: BAAI/bge-large-en | Store: chroma | Time: 0.92s
+Customers generally describe the products as effective for their skin. Reviewers note visible improvements such as smoother skin, smaller pores, reduced adult‑acne lesions and a refreshed, non‑greasy feel after a few weeks of use. Several comments highlight that the benefits become clear with continued use, though one user cautions that very dry skin may experience irritation. Overall, the excerpts convey a positive perception of the products’ efficacy.
+
+Model: BAAI/bge-large-en | Store: faiss | Time: 0.86s
+Customers generally describe the products as effective for their skin. One reviewer notes that after a few weeks the face cream “is going strong for the most part,” while another reports smoother skin and smaller pores after using Good Genes, despite an initial price concern. The acne‑targeting stickers are praised for helping adult acne and cysts, and the moisturizer is said to “do everything it claims to and more” without feeling greasy. Overall, the excerpts convey positive results, though a few users caution that benefits may require several weeks of use.
+
+Model: intfloat/e5-small-v2 | Store: chroma | Time: 0.81s
+Customers describe the products as highly effective, noting visible improvements such as reduced dullness, tighter‑looking skin, shrunken pores, smoother texture, and faster healing of breakouts. Several reviewers report seeing results within a few days to a week, and one even mentions a “significant change” after a month and a half of nightly use. The consistent 4‑ and 5‑star ratings and comments like “one of the best skin products” and “incredible” further underscore the strong perceived efficacy.
+
+Model: intfloat/e5-small-v2 | Store: faiss | Time: 0.82s
+Customers describe the products as highly effective, noting visible improvements such as reduced dullness, smoother texture, tighter skin, shrunken pores, less oil production, faster breakout healing, and even acne clearance within days to a week. The overwhelmingly positive ratings (four 5‑star reviews and one 4‑star review) reinforce that users feel the products work well for their skin concerns.
+
+Model: paraphrase-multilingual-MiniLM-L12-v2 | Store: chroma | Time: 0.73s
+Customers consistently describe the products as highly effective, noting that they work for all skin types and leave the skin feeling amazing, clean, moisturized and refreshed. Reviewers report visible improvements such as a reduced “dull” appearance and a pleasant tingling sensation that signals the product is working. Several users say they will continue purchasing and recommend the items to others.
+
+Model: paraphrase-multilingual-MiniLM-L12-v2 | Store: faiss | Time: 0.72s
+Customers consistently describe the products as highly effective, noting that they “work for all skin types,” leave the skin feeling “amazing,” and make the face feel “very clean.” Reviewers also report visible improvements such as a “less dull look,” and describe the skin as “moisturized and refreshed” without feeling heavy. All five excerpts are positive, indicating strong perceived efficacy.
+
+Model: all-MiniLM-L6-v2 | Store: chroma | Time: 0.72s
+Customers describe the products as highly effective, noting visible improvements such as a less “dull” complexion, clearer acne, tighter and brighter skin, and a reduction in melasma and uneven skin tone. Several reviewers say they saw results within a few days or weeks and consider the items staples in their routines. Even those with sensitive or combination skin report positive outcomes, indicating strong overall satisfaction.
+
+Model: all-MiniLM-L6-v2 | Store: faiss | Time: 0.74s
+Customers describe the products as highly effective, noting visible improvements such as a less‑dull complexion, clearer acne, tighter and brighter skin, and a reduction in melasma and uneven skin tone. Several reviewers say they saw results within a few days or weeks and consider the items staples in their routines. The overall sentiment in the excerpts is strongly positive, with most users rating the products 5 out of 5.
+
+
+What issues do customers report about product availability?
+-----------------------------------------------------------
+Model: sentence-t5-base | Store: chroma | Time: 0.83s
+The provided excerpts do not contain any comments about product availability, such as stock levels, shipping delays, or difficulty finding the item. Therefore, there is insufficient information to answer the question.
+
+Model: sentence-t5-base | Store: faiss | Time: 0.77s
+The provided excerpts do not contain any comments about product availability, such as stock levels, shipping delays, or difficulty finding the item. Therefore, there is insufficient information to answer the question.
+
+Model: BAAI/bge-large-en | Store: chroma | Time: 0.74s
+The provided excerpts do not contain any information about product availability issues. They focus on concerns such as product size, packaging, and functionality, but none mention difficulty obtaining the product, stock shortages, or related availability problems.
+
+Model: BAAI/bge-large-en | Store: faiss | Time: 0.79s
+The provided excerpts do not contain any information about product availability, such as stock levels, shipping delays, or difficulty finding the item. Therefore, they do not allow us to identify any customer‑reported issues related to availability.
+
+Model: intfloat/e5-small-v2 | Store: chroma | Time: 0.59s
+The provided excerpts do not contain any information about product availability issues. Therefore, I cannot answer the question based on the given reviews.
+
+Model: intfloat/e5-small-v2 | Store: faiss | Time: 0.46s
+The provided excerpts do not contain any information about product availability issues. Therefore, I cannot answer the question based on the given reviews.
+
+Model: paraphrase-multilingual-MiniLM-L12-v2 | Store: chroma | Time: 0.59s
+The provided excerpts do not contain any information about product availability issues. Therefore, I cannot answer the question based on the given text.
+
+Model: paraphrase-multilingual-MiniLM-L12-v2 | Store: faiss | Time: 0.67s
+The provided excerpts do not contain any information about product availability issues. They focus on scent, effectiveness, cruelty‑free status, and the fact that some reviewers received the product as a complimentary sample, but they do not mention whether the product is hard to find, out of stock, or otherwise unavailable. Therefore, there is insufficient data to answer the question.
+
+Model: all-MiniLM-L6-v2 | Store: chroma | Time: 0.76s
+The provided excerpts do not contain any comments about product availability, such as difficulty finding the item, stock shortages, or limited distribution. All mentions focus on receiving complimentary or sample sizes rather than describing any availability challenges. Therefore, there is insufficient information in these reviews to answer the question about availability issues.
+
+Model: all-MiniLM-L6-v2 | Store: faiss | Time: 0.75s
+One reviewer explicitly notes a concern about the product’s continued availability, saying they will keep buying it “as long as it’s still available.” No other excerpts mention stock or supply issues, so the only availability‑related issue reported is the fear that the item might become unavailable.
+
+
+Summarize the most common negative feedback patterns across reviews.
+--------------------------------------------------------------------
+Model: sentence-t5-base | Store: chroma | Time: 0.95s
+The excerpts repeatedly note adverse skin reactions, such as redness, swelling, burning under the eyes, increased oiliness and breakouts. Several reviewers also criticize the product’s scent, describing it as “terrible,” “awful,” or “heavy” and unpleasant. In addition, texture complaints appear, with users saying the formula absorbs very slowly, leaves a film that pulls off in gray chunks, or feels overly thick for oily skin.
+
+Model: sentence-t5-base | Store: faiss | Time: 0.85s
+The negative feedback most often mentions adverse skin reactions, such as redness, swelling, burning, increased oiliness and breakouts. Reviewers also repeatedly criticize the scent, describing it as “terrible,” “awful,” or “heavy” and unpleasant. In addition, several comments note texture problems, including slow absorption, a lingering film that pulls off in chunks, and a very thick consistency that isn’t suitable for oily skin.
+
+Model: BAAI/bge-large-en | Store: chroma | Time: 0.95s
+The negative reviews repeatedly criticize the product’s performance and texture. Reviewers say it fails to clean the skin effectively, leaves an odd film or oily residue, and even triggers tiny bumps or pimples. Additionally, several users note that the formula separates into an oily liquid that shaking cannot fix, leading to disappointment and a decision not to repurchase.
+
+Model: BAAI/bge-large-en | Store: faiss | Time: 0.76s
+The negative reviews repeatedly note that the product separates and releases an oily liquid, making it difficult to use. Reviewers also criticize its poor cleansing performance, saying it does not improve the skin even after double‑cleansing. Additionally, several users report an unpleasant residue or film that leads to tiny bumps and pimples on the face.
+
+Model: intfloat/e5-small-v2 | Store: chroma | Time: 0.95s
+The reviews most often criticize the product for its poor texture and stability—one user describes it as “melty… smearing all over” and later “completely disintegrated,” while another says the texture is “really weird,” “did not blend at all,” and “accentuated dry patches.” Several reviewers also note unpleasant sensory effects, such as an oily finish, a “horrible… mushroom” smell, and a feeling that the skin “couldn’t breathe,” and they all conclude that the product did not improve their skin or makeup. Additionally, one comment calls the item “overpriced” despite delivering no noticeable benefits.
+
+Model: intfloat/e5-small-v2 | Store: faiss | Time: 1.98s
+The reviews most frequently criticize the product for its poor texture and stability – it is described as “melty,” “disintegrated,” “weird,” and “doesn’t blend,” often leaving the skin feeling heavy, unable to breathe, and highlighting dry patches. Several users also note unpleasant side effects such as excessive oiliness, a “horrible” mushroom‑like odor, and a lack of any noticeable improvement to their makeup or skin freshness, while also calling the price “overpriced.”
+
+Model: paraphrase-multilingual-MiniLM-L12-v2 | Store: chroma | Time: 0.8s
+The only negative feedback in the excerpts criticizes the product’s efficacy and skin‑care impact: a reviewer says the set fails to diminish dark‑spot appearance, makes the skin oilier, and triggers breakouts despite consistent use. No other recurring complaints appear in the provided excerpts.
+
+Model: paraphrase-multilingual-MiniLM-L12-v2 | Store: faiss | Time: 0.97s
+The only negative feedback in the excerpts concerns the dark‑spot collection, which reviewers say “does not help reduce the appearance of dark spots,” and actually makes the skin “more oily” and triggers “breakouts” even for users who were previously breakout‑free. No other excerpts mention drawbacks, so the recurring negative theme is the product’s ineffectiveness on dark spots and its tendency to worsen oiliness and acne.
+
+Model: all-MiniLM-L6-v2 | Store: chroma | Time: 0.85s
+The excerpts note two recurring drawbacks: the formula’s thick, heavy texture can feel “slightly rough” and is advised against for oily skin, and in at least one case the product caused pronounced irritation around the eyes (redness, swelling, burning, and puffiness). These issues are the primary sources of negative feedback in the reviews provided.
+
+Model: all-MiniLM-L6-v2 | Store: faiss | Time: 0.82s
+The negative feedback most often mentions adverse skin reactions, such as redness, swelling, burning and puffiness around the eyes, even in users who don’t consider themselves sensitive. Several reviewers also criticize the product’s texture and finish, describing it as overly thick or heavy and causing the skin to become extremely oily. A few comments add that the price feels too high for the results they experienced.
+

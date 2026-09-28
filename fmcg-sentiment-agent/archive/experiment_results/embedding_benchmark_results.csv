@@ -1,0 +1,11 @@
+model,resolved_model_id,vector_store,embed_time_sec,index_build_time_sec,avg_query_latency_ms,avg_precision_at_10
+sentence-t5-base,sentence-transformers/sentence-t5-base,chroma,460.68,2.208,2.65,0.42
+sentence-t5-base,sentence-transformers/sentence-t5-base,faiss,460.68,0.002,3.13,0.42
+BAAI/bge-large-en,BAAI/bge-large-en,chroma,305.5,0.4,3.38,0.38
+BAAI/bge-large-en,BAAI/bge-large-en,faiss,305.5,0.01,5.83,0.38
+all-MiniLM-L6-v2,sentence-transformers/all-MiniLM-L6-v2,chroma,11.38,0.22,4.21,0.36
+all-MiniLM-L6-v2,sentence-transformers/all-MiniLM-L6-v2,faiss,11.38,0.002,0.43,0.36
+intfloat/e5-small-v2,intfloat/e5-small-v2,faiss,24.5,0.005,0.0,0.32
+intfloat/e5-small-v2,intfloat/e5-small-v2,chroma,24.5,0.209,6.44,0.32
+paraphrase-multilingual-MiniLM-L12-v2,sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2,faiss,21.14,0.0,0.0,0.26
+paraphrase-multilingual-MiniLM-L12-v2,sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2,chroma,21.14,0.229,2.59,0.26
