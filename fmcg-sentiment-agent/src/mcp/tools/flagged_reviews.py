@@ -11,13 +11,15 @@ Run:
 """
 
 
-import argparse
-import json
+import logging
 
 from src.data_prep.safety_flags import first_match_position
 from src.repositories.review_repository import (
     SEVERITY_LEVELS, apply_filters, get_as_of_date, in_window, load_reviews, window_bounds,
 )
+
+
+logger = logging.getLogger(__name__)
 
 ISSUE_TYPES = ["safety", "quality", "both"]
 EXCERPT_CHARS = 400
@@ -48,7 +50,9 @@ def flagged_reviews(severity_level=None, issue_type=None, last_n_days=None, star
         data = apply_filters(df, None, product_name, brand_name)
         data = in_window(data[data["submission_time"].notna()], start, end)
     except ValueError as exc:
+        logger.warning("flagged_reviews rejected the request: %s", exc)
         return {"error": str(exc)}
+
 
     data = data[data["is_safety_issue"]]
     if severity_level:
@@ -88,17 +92,3 @@ def flagged_reviews(severity_level=None, issue_type=None, last_n_days=None, star
         "reviews": reviews,
     }
 
-
-def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--level", default=None)
-    ap.add_argument("--issue-type", default=None)
-    ap.add_argument("--days", type=int, default=None)
-    ap.add_argument("--limit", type=int, default=5)
-    args = ap.parse_args()
-
-    result = flagged_reviews(args.level, args.issue_type, args.days, limit=args.limit)
-    print(json.dumps(result, indent=2))
-
-if __name__ == "__main__":
-    main()

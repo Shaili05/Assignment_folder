@@ -7,17 +7,20 @@ Every result carries the review id so answers can cite the exact reviews.
 Reviewer identity fields are never returned.
 """
 
+import logging
 import numpy as np
 import pandas as pd
 
 
-from src.rag.guardrails import looks_like_injection
-from src.rag.settings import (
-    COLLECTION_NAME, EMBEDDING_MODEL_ID, EXCERPT_CHARS, MAX_TOP_K, QUERY_PREFIX, TOP_K, VECTORSTORE_DIR,
+from src.config.constants import (
+    ASPECTS, COLLECTION_NAME, EMBEDDING_MODEL_ID, MAX_TOP_K, QUERY_PREFIX,
+    SEARCH_RESULT_EXCERPT_CHARS, SENTIMENTS, TOP_K,
 )
+from src.config.settings import VECTORSTORE_DIR
+from src.exceptions.exceptions import VectorStoreUnavailableError
+from src.guardrails.input_checks import looks_like_injection
 
-ASPECTS = ["packaging", "price", "texture_effectiveness", "availability"]
-SENTIMENTS = ["positive", "neutral", "negative"]
+logger = logging.getLogger(__name__)
 
 _state = {}
 
@@ -25,17 +28,27 @@ def get_collection():
     if "collection" not in _state:
         import chromadb
 
-
-        client = chromadb.PersistentClient(path=str(VECTORSTORE_DIR))
-        _state["collection"] = client.get_collection(COLLECTION_NAME)
+        if not VECTORSTORE_DIR.exists():
+            logger.error("Vector store folder not found: %s", VECTORSTORE_DIR)
+            raise VectorStoreUnavailableError(f"Vector store folder not found: {VECTORSTORE_DIR.name}")
+        try:
+            client = chromadb.PersistentClient(path=str(VECTORSTORE_DIR))
+            _state["collection"] = client.get_collection(COLLECTION_NAME)
+        except Exception as exc:
+            logger.exception("Could not open the vector store")
+            raise VectorStoreUnavailableError() from exc
     return _state["collection"]
+
 
 def get_embedder():
     if "embedder" not in _state:
         from sentence_transformers import SentenceTransformer
 
-
-        _state["embedder"] = SentenceTransformer(EMBEDDING_MODEL_ID)
+        try:
+            _state["embedder"] = SentenceTransformer(EMBEDDING_MODEL_ID)
+        except Exception as exc:
+            logger.exception("Could not load the embedding model")
+            raise VectorStoreUnavailableError("The embedding model could not be loaded.") from exc
     return _state["embedder"]
 
 
@@ -87,7 +100,10 @@ def search_reviews(question, top_k=TOP_K, aspect=None, sentiment=None, min_ratin
         top_k = max(1, min(int(top_k), MAX_TOP_K))
         where = build_where(sentiment, min_rating, max_rating, safety_only, start_date, end_date)
     except ValueError as exc:
+        logger.warning("search_reviews rejected the request: %s", exc)
         return {"error": str(exc)}
+
+
 
 
     n_results = top_k * 5 if aspect else top_k
@@ -105,7 +121,7 @@ def search_reviews(question, top_k=TOP_K, aspect=None, sentiment=None, min_ratin
             continue
         reviews.append({
             "review_id": int(rid),
-            "review_text": doc[:EXCERPT_CHARS],
+            "review_text": doc[:SEARCH_RESULT_EXCERPT_CHARS],
             "rating": meta.get("rating"),
             "sentiment": meta.get("sentiment"),
             "aspects": meta.get("aspects"),

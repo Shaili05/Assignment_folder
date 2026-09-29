@@ -52,7 +52,6 @@ async def main():
 
 
 if __name__ == "__main__":
-    # stdout carries the MCP protocol, so all logging goes to stderr.
     configure_logging(stream=sys.stderr)
     logger.info("Loading retrieval models, this takes up to a minute...")
     warm_up()

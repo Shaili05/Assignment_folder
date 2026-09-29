@@ -9,8 +9,7 @@ Run:
     python -m src.mcp.tools.summary_report --days 30 --save
 """
 
-import argparse
-import json
+import logging
 from pathlib import Path
 
 import pandas as pd
@@ -22,6 +21,7 @@ from src.repositories.review_repository import (
 )
 from src.mcp.tools.flagged_reviews import flagged_reviews
 
+logger = logging.getLogger(__name__)
 
 def compare(current, previous):
     if not current["n_reviews"] or not previous["n_reviews"]:
@@ -122,6 +122,7 @@ def generate_summary_report(window_days=7, as_of=None, product_name=None, brand_
         data = apply_filters(df, None, product_name, brand_name)
         data = data[data["submission_time"].notna()]
     except ValueError as exc:
+        logger.warning("generate_summary_report rejected the request: %s", exc)
         return {"error": str(exc)}
 
     start, end = window_bounds(as_of_date, window_days)
@@ -173,31 +174,5 @@ def save_report(report, output_dir=None):
     win = report["window"]
     path = out_dir / f"brand_health_report_{win['end']}_{win['days']}d.md"
     path.write_text(report["markdown"], encoding="utf-8")
+    logger.info("Saved the report to %s", path)
     return path
-
-
-def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--days", type=int, default=7)
-    ap.add_argument("--as-of", default=None)
-    ap.add_argument("--product", default=None)
-    ap.add_argument("--brand", default=None)
-    ap.add_argument("--save", action="store_true")
-    ap.add_argument("--json", action="store_true")
-    args = ap.parse_args()
-
-    report = generate_summary_report(args.days, args.as_of, args.product, args.brand)
-    if "error" in report:
-        raise SystemExit(report["error"])
-
-    if args.json:
-        print(json.dumps({k: v for k, v in report.items() if k != "markdown"}, indent=2))
-    else:
-        print(report["markdown"])
-    if args.save:
-        print(f"Saved {save_report(report)}")
-
-
-if __name__ == "__main__":
-    main()
-

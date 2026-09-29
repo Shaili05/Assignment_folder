@@ -1,7 +1,7 @@
 """
 run_evaluation.py
 
-Runs the test questions through each (framework, model) pair and scores every
+Runs the evaluation questions through the agent for each model and scores every
 answer automatically:
 
   status    the expected outcome (answered, clarify, out_of_scope, blocked)
@@ -10,34 +10,35 @@ answer automatically:
   grounded  no invalid citations and no quotes missing from the reviews
   passed    all of the above
 
-Results go to data/evaluation/results.csv and summary.csv. Running a pair
-again replaces its old rows. The dashboard Evaluation tab reads these files.
+Results go to data/evaluation/results.csv and summary.csv. Running a question
+again replaces its old row, so a few questions can be re-run with --ids.
+The dashboard Evaluation tab reads these files.
 
 Run:
-    python src/evaluation/run_evaluation.py --frameworks langgraph --models groq:openai/gpt-oss-120b
-    python src/evaluation/run_evaluation.py --frameworks langgraph autogen --models groq:openai/gpt-oss-120b groq:openai/gpt-oss-20b groq:qwen/qwen3.8-27b
+    python -m src.evaluation.run_evaluation --models groq:openai/gpt-oss-120b
+    python -m src.evaluation.run_evaluation --ids lowest_aspect packaging_evidence
 """
 
-import argparse
-import sys
-from pathlib import Path
+import logging
 
 import pandas as pd
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from agent.audit import new_session_id
-from agent.runtime import AgentRuntime
-from evaluation.test_questions import build_questions, matches
+from src.agents.review_agent import ReviewAgent
+from src.config.constants import DEFAULT_MODEL
+from src.config.settings import LOGS_DIR, REPO_ROOT
+from src.evaluation.eval_questions import build_questions, matches
+from src.exceptions.exceptions import AppError
+from src.utils.audit_logger import new_session_id
+from src.utils.output import write_line
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
+logger = logging.getLogger(__name__)
+
 OUTPUT_DIR = REPO_ROOT / "data" / "evaluation"
 RESULTS_PATH = OUTPUT_DIR / "results.csv"
 SUMMARY_PATH = OUTPUT_DIR / "summary.csv"
-AUDIT_PATH = REPO_ROOT / "logs" / "evaluation_audit.jsonl"
+AUDIT_PATH = LOGS_DIR / "evaluation_audit.jsonl"
 
-# Every row written to results.csv has exactly these keys, in this order,
-# whether the question was scored normally or failed outright. Keeping one
-# fixed set of columns is what stops a partial row from breaking the CSV.
+
 ROW_FIELDS = [
     "status", "passed", "status_ok", "tool_ok", "facts_ok", "citations_ok", "grounded_ok",
     "unsupported_numbers", "invalid_citations", "unsupported_quotes", "tool_call_count",
@@ -46,7 +47,7 @@ ROW_FIELDS = [
 
 
 def score_question(question, record):
-    answer = record.get("answer", "")
+    answer = record.get("error_detail") or record.get("answer", "")
     tools = [call["name"] for call in record.get("tool_calls", [])]
     checks = record.get("checks") or {}
 
@@ -100,31 +101,34 @@ def failed_row(message):
     return {field: row[field] for field in ROW_FIELDS}
 
 
-def run_pair(framework, model, questions):
-    print(f"{framework} / {model}: starting the agent", flush=True)
-    runtime = AgentRuntime(framework, model, audit_path=AUDIT_PATH)
-    rows = []
+def run_pair(model, questions):
+    write_line(f"{model}: starting the agent")
+    agent = ReviewAgent(model, audit_path=AUDIT_PATH)
+    framework = agent.name
     try:
-        runtime.wait_until_ready()
-    except RuntimeError as exc:
-        print(f"  could not start: {exc}", flush=True)
+        agent.wait_until_ready()
+    except AppError as exc:
+        logger.error("Could not start the agent for %s: %s", model, exc.message)
+        agent.close()
         return [{"framework": framework, "model": model, "id": q["id"], "question": q["question"],
-                 **failed_row(str(exc))} for q in questions]
+                 **failed_row(exc.message)} for q in questions]
 
+    rows = []
     sessions = {}
     try:
         for question in questions:
             session_id = sessions.setdefault(question["session"], new_session_id())
             try:
-                record = runtime.ask(question["question"], question.get("role", "brand_manager"), session_id)
+                record = agent.ask(question["question"], question.get("role", "brand_manager"), session_id)
                 scored = score_question(question, record)
             except Exception as exc:
+                logger.warning("Question %s failed: %s", question["id"], exc)
                 scored = failed_row(f"{exc.__class__.__name__}: {exc}")
             rows.append({"framework": framework, "model": model, "id": question["id"],
                          "question": question["question"], **scored})
-            print(f"  {question['id']}: {'PASS' if scored['passed'] else 'FAIL'} ({scored['status']})", flush=True)
+            write_line(f"  {question['id']}: {'PASS' if scored['passed'] else 'FAIL'} ({scored['status']})")
     finally:
-        runtime.close()
+        agent.close()
     return rows
 
 
@@ -150,39 +154,40 @@ def summarize(results):
     return summary.sort_values(["pass_rate_pct", "avg_latency_s"], ascending=[False, True]).reset_index(drop=True)
 
 
-def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--frameworks", nargs="+", default=["langgraph"], choices=["langgraph", "autogen"])
-    ap.add_argument("--models", nargs="+", default=["groq:openai/gpt-oss-120b"])
-    args = ap.parse_args()
-
+def run(models=None, ids=None):
+    models = models or [DEFAULT_MODEL]
     questions = build_questions()
-    print(f"{len(questions)} questions, {len(args.frameworks) * len(args.models)} pairs to run", flush=True)
+    if ids:
+        known = {q["id"] for q in questions}
+        unknown = [i for i in ids if i not in known]
+        if unknown:
+            raise SystemExit(f"Unknown question ids: {', '.join(unknown)}")
+        questions = [q for q in questions if q["id"] in ids]
+    write_line(f"{len(questions)} questions, {len(models)} model(s) to run")
+
 
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     results = pd.read_csv(RESULTS_PATH) if RESULTS_PATH.exists() else pd.DataFrame()
+    if not results.empty:
+        results = results[results["framework"] == ReviewAgent.name]
 
-    for framework in args.frameworks:
-        for model in args.models:
-            rows = run_pair(framework, model, questions)
-            if not results.empty:
-                keep = ~((results["framework"] == framework) & (results["model"] == model))
-                results = results[keep]
-            results = pd.concat([results, pd.DataFrame(rows)], ignore_index=True)
-            results.to_csv(RESULTS_PATH, index=False)
-            summarize(results).to_csv(SUMMARY_PATH, index=False)
+
+    for model in models:
+        rows = run_pair(model, questions)
+        if not results.empty:
+            ran = {row["id"] for row in rows}
+            stale = (results["model"] == model) & results["id"].isin(ran)
+            results = results[~stale]
+        results = pd.concat([results, pd.DataFrame(rows)], ignore_index=True)
+        results.to_csv(RESULTS_PATH, index=False)
+        summarize(results).to_csv(SUMMARY_PATH, index=False)
+
 
     summary = summarize(results)
-    print()
-    print(summary.to_string(index=False))
     best = summary.iloc[0]
-    print()
-    print(f"Best so far: {best['framework']} with {best['model']} ({best['pass_rate_pct']}% passed, "
-          f"{best['avg_latency_s']}s average)")
-    print(f"Wrote {RESULTS_PATH} and {SUMMARY_PATH}")
-
-
-if __name__ == "__main__":
-    main()
-
+    write_line("")
+    write_line(summary.to_string(index=False))
+    write_line("")
+    write_line(f"Best so far: {best['model']} ({best['pass_rate_pct']}% passed, {best['avg_latency_s']}s average)")
+    write_line(f"Wrote {RESULTS_PATH} and {SUMMARY_PATH}")
 
