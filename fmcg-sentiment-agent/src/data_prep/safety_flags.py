@@ -95,8 +95,6 @@ def analyze_review(text, sentiment, rating):
     has_rating = rating is not None
     is_low_rating = has_rating and rating <= 2
 
-    # The star rating is the reviewer's own verdict on the product. A 5-star
-    # review is never escalated, a 4-star review only for high-weight terms.
     if has_rating and rating >= 5:
         return empty
     if has_rating and rating == 4:
@@ -106,7 +104,6 @@ def analyze_review(text, sentiment, rating):
 
     top_weight = max(weight for _, weight in found.values())
 
-    # Weak terms alone are only flagged when the review is negative overall.
     if top_weight == 1 and not (is_negative or is_low_rating):
         return empty
 

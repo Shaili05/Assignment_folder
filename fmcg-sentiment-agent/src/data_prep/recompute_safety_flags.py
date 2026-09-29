@@ -13,17 +13,22 @@ Run:
     python src/data_prep/recompute_safety_flags.py
 """
 
-import argparse
+import logging
 import shutil
-import sys
 from pathlib import Path
+
 
 import pandas as pd
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from utils.run_log import log_run
 
-from safety_flags import analyze_review
+from src.config.settings import LABELED_REVIEWS_PATH, REVIEWS_PATH, VECTORSTORE_DIR
+from src.data_prep.safety_flags import analyze_review
+from src.utils.output import write_line
+from src.utils.run_log import log_run
+
+
+logger = logging.getLogger(__name__)
+
 
 FLAG_COLUMNS = ["is_safety_issue", "issue_type", "severity_score", "severity_level", "matched_terms"]
 
@@ -92,50 +97,46 @@ def sync_chroma(df, chroma_dir, collection_name):
     for start in range(0, len(df), BATCH_SIZE):
         end = min(start + BATCH_SIZE, len(df))
         collection.update(ids=ids[start:end], metadatas=metadatas[start:end])
-        print(f"  Updated {end} / {len(df)} vectors")
+        logger.info("Updated %d / %d vectors", end, len(df))
 
 
-def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--scrubbed", default="data/labeled/reviews_scrubbed.csv")
-    ap.add_argument("--labeled", default="data/labeled/labeled_reviews.csv")
-    ap.add_argument("--chroma-dir", default="data/vectorstore/chroma_db")
-    ap.add_argument("--collection", default="reviews")
-    ap.add_argument("--skip-chroma", action="store_true")
-    args = ap.parse_args()
+def run(labeled=None, scrubbed=None, chroma_dir=None, collection="reviews", skip_chroma=False):
+    labeled = labeled or str(LABELED_REVIEWS_PATH)
+    scrubbed = scrubbed or str(REVIEWS_PATH)
+    chroma_dir = chroma_dir or str(VECTORSTORE_DIR)
+
 
     scrubbed_df = None
-    for name in [args.labeled, args.scrubbed]:
+    for name in [labeled, scrubbed]:
         path = Path(name)
         if not path.exists():
-            print(f"Skipped {name} (file not found)")
+            logger.warning("Skipped %s (file not found)", name)
             continue
         df, old_flagged = recompute_file(path)
-        print(f"{path.name}: flagged {old_flagged} -> {int(df['is_safety_issue'].sum())} of {len(df)} rows")
-        if name == args.scrubbed:
+        write_line(f"{path.name}: flagged {old_flagged} -> {int(df['is_safety_issue'].sum())} of {len(df)} rows")
+        if name == scrubbed:
             scrubbed_df = df
+
 
     if scrubbed_df is None:
         raise SystemExit("Scrubbed CSV not found, nothing to sync.")
 
-    flagged = scrubbed_df[scrubbed_df["is_safety_issue"]]
-    print(f"Issue types: {flagged['issue_type'].value_counts().to_dict()}")
-    print(f"Severity levels: {flagged['severity_level'].value_counts().to_dict()}")
 
-    if args.skip_chroma:
-        print("Chroma sync skipped")
+    flagged = scrubbed_df[scrubbed_df["is_safety_issue"]]
+    write_line(f"Issue types: {flagged['issue_type'].value_counts().to_dict()}")
+    write_line(f"Severity levels: {flagged['severity_level'].value_counts().to_dict()}")
+
+
+    if skip_chroma:
+        write_line("Chroma sync skipped")
     else:
-        print(f"Syncing metadata to {args.chroma_dir}")
-        sync_chroma(scrubbed_df, args.chroma_dir, args.collection)
+        write_line(f"Syncing metadata to {chroma_dir}")
+        sync_chroma(scrubbed_df, chroma_dir, collection)
+
 
     log_run(
         script_name="recompute_safety_flags.py",
-        params=f"scrubbed={args.scrubbed}, labeled={args.labeled}, chroma_dir={args.chroma_dir}, skip_chroma={args.skip_chroma}",
+        params=f"scrubbed={scrubbed}, labeled={labeled}, chroma_dir={chroma_dir}, skip_chroma={skip_chroma}",
         summary=f"flagged={len(flagged)}, issue_types={flagged['issue_type'].value_counts().to_dict()}",
     )
-
-
-if __name__ == "__main__":
-    main()
-
 

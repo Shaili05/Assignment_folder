@@ -11,19 +11,23 @@ Run:
     python src/data_prep/apply_label_rules.py
 """
 
-import argparse
+import logging
 import shutil
-import sys
 from pathlib import Path
+
 
 import pandas as pd
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from utils.run_log import log_run
 
-from label_rules import ASPECT_ORDER, rating_to_sentiment, rule_aspects
-from recompute_safety_flags import FLAG_COLUMNS, sync_chroma
-from safety_flags import analyze_review
+from src.config.settings import LABELED_REVIEWS_PATH, REVIEWS_PATH, VECTORSTORE_DIR
+from src.data_prep.label_rules import ASPECT_ORDER, rating_to_sentiment, rule_aspects
+from src.data_prep.recompute_safety_flags import FLAG_COLUMNS, sync_chroma
+from src.data_prep.safety_flags import analyze_review
+from src.utils.output import write_line
+from src.utils.run_log import log_run
+
+
+logger = logging.getLogger(__name__)
 
 
 def apply_rules(path):
@@ -51,49 +55,46 @@ def apply_rules(path):
     return df, old_sentiment, old_flagged
 
 
-def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--scrubbed", default="data/labeled/reviews_scrubbed.csv")
-    ap.add_argument("--labeled", default="data/labeled/labeled_reviews.csv")
-    ap.add_argument("--chroma-dir", default="data/vectorstore/chroma_db")
-    ap.add_argument("--collection", default="reviews")
-    ap.add_argument("--skip-chroma", action="store_true")
-    args = ap.parse_args()
+def run(labeled=None, scrubbed=None, chroma_dir=None, collection="reviews", skip_chroma=False):
+    labeled = labeled or str(LABELED_REVIEWS_PATH)
+    scrubbed = scrubbed or str(REVIEWS_PATH)
+    chroma_dir = chroma_dir or str(VECTORSTORE_DIR)
+
 
     scrubbed_df = None
-    for name in [args.labeled, args.scrubbed]:
+    for name in [labeled, scrubbed]:
         path = Path(name)
         if not path.exists():
-            print(f"Skipped {name} (file not found)")
+            logger.warning("Skipped %s (file not found)", name)
             continue
         df, old_sentiment, old_flagged = apply_rules(path)
-        print(f"{path.name}")
-        print(f"  sentiment before: {old_sentiment}")
-        print(f"  sentiment after:  {df['sentiment'].value_counts().to_dict()}")
-        print(f"  flagged: {old_flagged} -> {int(df['is_safety_issue'].sum())}")
-        if name == args.scrubbed:
+        write_line(f"{path.name}")
+        write_line(f"  sentiment before: {old_sentiment}")
+        write_line(f"  sentiment after:  {df['sentiment'].value_counts().to_dict()}")
+        write_line(f"  flagged: {old_flagged} -> {int(df['is_safety_issue'].sum())}")
+        if name == scrubbed:
             scrubbed_df = df
+
 
     if scrubbed_df is None:
         raise SystemExit("Scrubbed CSV not found, nothing to sync.")
 
-    counts = {a: int(scrubbed_df["aspects"].str.contains(a).sum()) for a in ASPECT_ORDER}
-    print(f"Aspect counts: {counts}")
 
-    if args.skip_chroma:
-        print("Chroma sync skipped")
+    counts = {a: int(scrubbed_df["aspects"].str.contains(a).sum()) for a in ASPECT_ORDER}
+    write_line(f"Aspect counts: {counts}")
+
+
+    if skip_chroma:
+        write_line("Chroma sync skipped")
     else:
-        print(f"Syncing metadata to {args.chroma_dir}")
-        sync_chroma(scrubbed_df, args.chroma_dir, args.collection)
+        write_line(f"Syncing metadata to {chroma_dir}")
+        sync_chroma(scrubbed_df, chroma_dir, collection)
+
 
     log_run(
         script_name="apply_label_rules.py",
-        params=f"scrubbed={args.scrubbed}, labeled={args.labeled}, skip_chroma={args.skip_chroma}",
+        params=f"scrubbed={scrubbed}, labeled={labeled}, skip_chroma={skip_chroma}",
         summary=f"sentiment={scrubbed_df['sentiment'].value_counts().to_dict()}, aspects={counts}",
     )
-
-
-if __name__ == "__main__":
-    main()
 
 

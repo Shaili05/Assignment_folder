@@ -22,22 +22,25 @@ Run:
     python src/data_prep/scrub_pii.py --input data/labeled/labeled_reviews.csv --output data/labeled/reviews_scrubbed.csv
 """
 
-import argparse
+import logging
 import re
-import sys
 from pathlib import Path
+
 
 import pandas as pd
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from utils.run_log import log_run
+
+from src.config.settings import LABELED_REVIEWS_PATH, REVIEWS_PATH
+from src.utils.output import write_line
+from src.utils.run_log import log_run
+
+
+logger = logging.getLogger(__name__)
 
 EMAIL_PATTERN = re.compile(r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}")
 PHONE_PATTERN = re.compile(r"(?:\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b")
 URL_PATTERN = re.compile(r"(?:https?://\S+|www\.\S+)")
 
-# Emails/URLs checked before phone, so something like "contact: a@b.com"
-# doesn't get partially eaten by the phone pattern first.
 REDACTION_MAP = {
     "EMAIL": ("[REDACTED_EMAIL]", EMAIL_PATTERN),
     "URL": ("[REDACTED_URL]", URL_PATTERN),
@@ -121,31 +124,35 @@ def scrub_dataframe(df):
     return df, audit_df, masked_columns
 
 
-def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--input", default="data/labeled/labeled_reviews.csv")
-    ap.add_argument("--output", default="data/labeled/reviews_scrubbed.csv")
-    args = ap.parse_args()
+def run(input_path=None, output_path=None):
+    input_path = input_path or str(LABELED_REVIEWS_PATH)
+    output_path = output_path or str(REVIEWS_PATH)
 
-    df = pd.read_csv(args.input, low_memory=False)
-    print(f"Loaded {len(df)} labeled rows from {args.input}")
+
+    df = pd.read_csv(input_path, low_memory=False)
+    write_line(f"Loaded {len(df)} labeled rows from {input_path}")
+
 
     scrubbed_df, audit_df, masked_columns = scrub_dataframe(df)
 
-    Path(args.output).parent.mkdir(parents=True, exist_ok=True)
-    scrubbed_df.to_csv(args.output, index=False)
+
+    Path(output_path).parent.mkdir(parents=True, exist_ok=True)
+    scrubbed_df.to_csv(output_path, index=False)
+
 
     text_redactions = int((audit_df["action"] == "text_redaction").sum())
     column_masks = int((audit_df["action"] == "column_mask").sum())
 
-    print(f"Masked identity columns: {masked_columns}")
-    print(f"Text-level redactions: {text_redactions}")
-    print(f"Column-level masking actions: {column_masks}")
-    print(f"Wrote {args.output} ({scrubbed_df.shape[0]} rows, {scrubbed_df.shape[1]} cols)")
+
+    write_line(f"Masked identity columns: {masked_columns}")
+    write_line(f"Text-level redactions: {text_redactions}")
+    write_line(f"Column-level masking actions: {column_masks}")
+    write_line(f"Wrote {output_path} ({scrubbed_df.shape[0]} rows, {scrubbed_df.shape[1]} cols)")
+
 
     log_run(
         script_name="scrub_pii.py",
-        params=f"input={args.input}, output={args.output}",
+        params=f"input={input_path}, output={output_path}",
         summary=(
             f"rows={scrubbed_df.shape[0]}, cols={scrubbed_df.shape[1]}, "
             f"masked_columns={masked_columns}, text_redactions={text_redactions}, "
@@ -154,6 +161,4 @@ def main():
     )
 
 
-if __name__ == "__main__":
-    main()
 
