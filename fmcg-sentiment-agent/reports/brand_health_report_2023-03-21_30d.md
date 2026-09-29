@@ -20,7 +20,7 @@ Period: 2023-02-20 to 2023-03-21 (30 days). Compared with 2023-01-21 to 2023-02-
 
 ## Flagged reviews
 
-- Review 5665 (2023-03-06, 1 stars, safety, severity high 0.75): After trying this cream two separate times, I just cannot see the price being justified. The moisturizer itself is okay, but not overly moisturizing and I noticed zero anti-aging effects. It wasn’t noticeably bad, per se
+- Review 5665 (2023-03-06, 1 stars, safety, severity high 0.75): ...fects. It wasn’t noticeably bad, per se, but it certainly wasn’t anything to write home about.The thing I did notice was that this cream was actually irritating to the skin if I’d used any sort of acne treatment in th
 
 ## Products with the highest negative share
 
