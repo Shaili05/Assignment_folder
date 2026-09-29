@@ -18,6 +18,6 @@ def configure_logging(level=logging.INFO, stream=None):
         level=level,
         format="%(asctime)s %(levelname)s %(name)s: %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
-        stream=stream or sys.stdout,
+        stream=stream or sys.stderr,
         force=True,
     )
