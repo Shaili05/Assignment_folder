@@ -44,7 +44,6 @@ FRAMEWORK = "langgraph"
 BRAND_SECTIONS = ["Overview", "Trends", "Flagged reviews", "Assistant"]
 SUPPORT_SECTIONS = ["Flagged reviews", "Assistant"]
 
-# Richer, more saturated palette so bars/segments are easy to tell apart.
 SENTIMENT_COLORS = {"positive": "#2fa860", "neutral": "#8a8f98", "negative": "#d6423c"}
 SEVERITY_COLORS = {"low": "#3d8bfd", "medium": "#f0952e", "high": "#d6423c"}
 SEVERITY_LEVELS = ["low", "medium", "high"]
