@@ -1,11 +1,8 @@
 """
-test_guardrails.py
-
-Tests for src/rag/guardrails.py -- the input checks that run before any
-model call.
+Tests for src/guardrails/input_checks.py, the checks that run before any model call.
 """
 
-from src.rag.guardrails import check_question, looks_like_injection
+from src.guardrails.input_checks import check_question, looks_like_injection
 
 
 def test_clear_question_passes():
@@ -44,4 +41,5 @@ def test_looks_like_injection_detects_marker():
 
 def test_looks_like_injection_ignores_normal_text():
     assert looks_like_injection("This product works great, I love the packaging.") is False
+
 
