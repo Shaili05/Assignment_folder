@@ -24,15 +24,12 @@ from src.exceptions.exceptions import AppError
 logger = logging.getLogger(__name__)
 
 
-
-
 def app_error_handler(request, exc):
     if exc.status_code >= 500:
         logger.error("%s on %s %s: %s", exc.error_code, request.method, request.url.path, exc.message)
     else:
         logger.warning("%s on %s %s: %s", exc.error_code, request.method, request.url.path, exc.message)
     return JSONResponse(status_code=exc.status_code, content=exc.to_dict())
-
 
 
 
@@ -44,7 +41,6 @@ def validation_error_handler(request, exc):
     logger.warning("validation_error on %s %s: %s", request.method, request.url.path, details)
     body = {"error": {"code": "validation_error", "message": "The request data is not valid.", "details": details}}
     return JSONResponse(status_code=422, content=body)
-
 
 
 

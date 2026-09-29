@@ -8,8 +8,6 @@ from src.services.review_service import get_sentiment_trend
 router = APIRouter(prefix="/trends", tags=["trends"])
 
 
-
-
 @router.get("", response_model=TrendResponse)
 def get_trends(
     aspect: str = None,
