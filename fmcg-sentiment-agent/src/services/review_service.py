@@ -1,28 +1,43 @@
-from src.mcp.tools.sentiment_trend import sentiment_trend
+"""
+review_service.py
+
+
+Business logic between the routers and the review tools. Tool errors and
+missing data are raised as domain exceptions; exception handlers turn them
+into HTTP responses.
+"""
+
+from src.exceptions.exceptions import InvalidRequestError, ReviewsNotFoundError
 from src.mcp.tools.flagged_reviews import flagged_reviews
+from src.mcp.tools.sentiment_trend import sentiment_trend
 from src.mcp.tools.summary_report import generate_summary_report
 from src.repositories.review_repository import (
     ASPECTS, SEVERITY_LEVELS, get_as_of_date, load_reviews, sentiment_counts,
 )
 
 
+def check_result(result):
+    if "error" in result:
+        raise InvalidRequestError(result["error"])
+    return result
+
+
 def get_sentiment_trend(aspect, product_name, brand_name, granularity, periods, as_of):
-    result = sentiment_trend(
+    return check_result(sentiment_trend(
         aspect=aspect,
         product_name=product_name,
         brand_name=brand_name,
         granularity=granularity,
         periods=periods,
         as_of=as_of,
-    )
-    if "error" in result:
-        raise ValueError(result["error"])
-    return result
+    ))
+
+
 
 
 def get_flagged_reviews(severity_level, issue_type, last_n_days, start_date, end_date,
-                         product_name, brand_name, limit, as_of, full_text=False):
-    result = flagged_reviews(
+                        product_name, brand_name, limit, as_of, full_text=False):
+    return check_result(flagged_reviews(
         severity_level=severity_level,
         issue_type=issue_type,
         last_n_days=last_n_days,
@@ -33,22 +48,19 @@ def get_flagged_reviews(severity_level, issue_type, last_n_days, start_date, end
         limit=limit,
         as_of=as_of,
         full_text=full_text,
-    )
-    if "error" in result:
-        raise ValueError(result["error"])
-    return result
+    ))
+
+
 
 
 def get_overview(window_days, as_of, product_name, brand_name):
-    result = generate_summary_report(
+    return check_result(generate_summary_report(
         window_days=window_days,
         as_of=as_of,
         product_name=product_name,
         brand_name=brand_name,
-    )
-    if "error" in result:
-        raise ValueError(result["error"])
-    return result
+    ))
+
 
 
 
@@ -57,17 +69,17 @@ def get_all_time_stats():
     total = len(frame)
     overall = sentiment_counts(frame)
     flagged = frame[frame["is_safety_issue"]]
-
     aspects = []
     for aspect in ASPECTS:
         group = frame[frame["aspects"].str.contains(aspect)]
         if group.empty:
             continue
         aspects.append({"aspect": aspect, **sentiment_counts(group)})
-
     severity_counts = {lvl: int((flagged["severity_level"] == lvl).sum()) for lvl in SEVERITY_LEVELS}
-    issue_type_counts = {str(k): int(v) for k, v in flagged.groupby("issue_type").size().to_dict().items()} if not flagged.empty else {}
-
+    issue_type_counts = (
+        {str(k): int(v) for k, v in flagged.groupby("issue_type").size().to_dict().items()}
+        if not flagged.empty else {}
+    )
     return {
         "total_reviews": total,
         "overall": overall,
@@ -90,7 +102,7 @@ def get_product_span(product_name=None):
     if product_name and product_name != "All products":
         frame = frame[frame["product_name"] == product_name]
     if frame.empty:
-        return None
+        raise ReviewsNotFoundError(f"No reviews found for {product_name}")
     return {
         "count": int(len(frame)),
         "first": str(frame["submission_time"].min().date()),
@@ -101,4 +113,3 @@ def get_product_span(product_name=None):
 def get_data_as_of():
     frame = load_reviews()
     return str(get_as_of_date(frame).date())
-

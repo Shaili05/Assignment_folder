@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 
 from src.schemas.response_schema import OverviewResponse
 from src.services.review_service import get_overview
@@ -12,8 +12,5 @@ def get_overview_report(
     product_name: str = None,
     brand_name: str = None,
 ):
-    try:
-        return get_overview(window_days, as_of, product_name, brand_name)
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc))
+    return get_overview(window_days, as_of, product_name, brand_name)
 

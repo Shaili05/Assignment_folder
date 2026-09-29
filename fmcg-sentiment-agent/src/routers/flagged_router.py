@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 
 from src.schemas.response_schema import FlaggedReviewsResponse
 from src.services.review_service import get_flagged_reviews
@@ -18,10 +18,8 @@ def get_flagged(
     as_of: str = None,
     full_text: bool = False,
 ):
-    try:
-        return get_flagged_reviews(
-            severity_level, issue_type, last_n_days, start_date, end_date,
-            product_name, brand_name, limit, as_of, full_text,
-        )
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc))
+    return get_flagged_reviews(
+        severity_level, issue_type, last_n_days, start_date, end_date,
+        product_name, brand_name, limit, as_of, full_text,
+    )
+

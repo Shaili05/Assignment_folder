@@ -6,6 +6,9 @@ here the dashboard passes it in. A role decides which tools the agent may call
 and how much of the audit log the user can see.
 """
 
+from src.exceptions.exceptions import InvalidRoleError
+
+
 ALL_TOOLS = ["sentiment_trend", "flagged_reviews", "generate_summary_report", "search_reviews"]
 
 ROLES = {
@@ -28,7 +31,7 @@ DEFAULT_ROLE = "brand_manager"
 
 def get_role(role):
     if role not in ROLES:
-        raise ValueError(f"Unknown role '{role}'. Valid roles: {', '.join(ROLES)}")
+        raise InvalidRoleError(f"Unknown role '{role}'. Valid roles: {', '.join(ROLES)}")
     return ROLES[role]
 
 
