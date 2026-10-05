@@ -1,9 +1,9 @@
 import pytest
-
+import sys
 from src.config.constants import LLM_MAX_RETRIES
 from src.exceptions.exceptions import ConfigurationError, LLMProviderError, RateLimitError
 from src.rag import generator
-
+from types import SimpleNamespace
 
 class FakeApiError(Exception):
     def __init__(self, status_code):
@@ -69,5 +69,20 @@ def test_call_recovers_after_one_failure(monkeypatch, no_sleep):
     client = use_client(monkeypatch, [FakeApiError(429), "ok"])
     assert generator.call_llm([], "any-model") == "ok"
     assert client.calls == 2
+
+
+def test_client_is_created_once_with_the_api_key(monkeypatch):
+    created = []
+
+    class FakeGroq:
+        def __init__(self, api_key):
+            created.append(api_key)
+
+    monkeypatch.setitem(sys.modules, "groq", SimpleNamespace(Groq=FakeGroq))
+    monkeypatch.setattr(generator, "_state", {})
+    monkeypatch.setenv("GROQ_API_KEY", "test-key")
+    first = generator.get_client()
+    assert generator.get_client() is first
+    assert created == ["test-key"]
 
 

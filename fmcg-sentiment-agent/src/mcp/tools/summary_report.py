@@ -1,20 +1,11 @@
-"""
-summary_report.py
-
-Tool 3: brand-health summary for a recent window (default 7 days) compared
-with the window before it. Returns the numbers and a ready-to-read markdown
-report.
-
-Run:
-    python -m src.mcp.tools.summary_report --days 30 --save
-"""
-
 import logging
 from pathlib import Path
 
 import pandas as pd
 
-from src.config.constants import ASPECTS, LOW_SAMPLE_THRESHOLD, MIN_PRODUCT_REVIEWS_FOR_TABLE
+from src.config.constants import (
+    ASPECTS, LOW_SAMPLE_THRESHOLD, MIN_PRODUCT_REVIEWS_FOR_TABLE, SUMMARY_MAX_WINDOW_DAYS,
+)
 from src.config.settings import REPORTS_DIR
 from src.repositories.review_repository import (
     apply_filters, get_as_of_date, in_window, load_reviews, sentiment_counts, window_bounds,
@@ -114,8 +105,8 @@ def render_markdown(report):
 def generate_summary_report(window_days=7, as_of=None, product_name=None, brand_name=None, df=None):
     try:
         window_days = int(window_days)
-        if window_days < 1 or window_days > 3650:
-            raise ValueError("window_days must be between 1 and 3650")
+        if window_days < 1 or window_days > SUMMARY_MAX_WINDOW_DAYS:
+            raise ValueError(f"window_days must be between 1 and {SUMMARY_MAX_WINDOW_DAYS}")
 
         df = load_reviews() if df is None else df
         as_of_date = get_as_of_date(df, as_of)
@@ -176,3 +167,4 @@ def save_report(report, output_dir=None):
     path.write_text(report["markdown"], encoding="utf-8")
     logger.info("Saved the report to %s", path)
     return path
+

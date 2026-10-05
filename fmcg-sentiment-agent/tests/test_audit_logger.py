@@ -1,9 +1,10 @@
 import json
 
 from src.config import constants
+from src.config.constants import AUDIT_REDACTED_FIELDS
 from src.utils import audit_logger
 from src.utils.audit_logger import (
-    REDACTED_FIELDS, estimate_cost, load_log, log_interaction, read_log, usage_summary,
+    estimate_cost, load_log, log_interaction, new_session_id, read_log, usage_summary,
 )
 from src.utils.output import write_line
 
@@ -53,7 +54,7 @@ def test_support_team_sees_only_its_own_redacted_session(tmp_path):
     log_interaction(make_record("s2"), path)
     records = read_log("support_team", session_id="s1", path=path)
     assert len(records) == 1
-    assert set(records[0]) == set(REDACTED_FIELDS)
+    assert set(records[0]) == set(AUDIT_REDACTED_FIELDS)
     assert "answer" not in records[0]
 
 
@@ -84,7 +85,6 @@ def test_usage_summary_of_no_records_is_empty():
 
 
 def test_write_failure_does_not_raise(tmp_path):
-    # A folder path cannot be opened as a file, so the write fails.
     entry = log_interaction(make_record(), tmp_path)
     assert "interaction_id" in entry
 
@@ -98,5 +98,21 @@ def test_write_line_goes_to_stdout(capsys):
     captured = capsys.readouterr()
     assert captured.out == "hello\n"
     assert captured.err == ""
+
+
+def test_session_ids_are_unique_and_have_the_set_length():
+    ids = {new_session_id() for _ in range(20)}
+    assert len(ids) == 20
+    assert all(len(session_id) == constants.SESSION_ID_LENGTH for session_id in ids)
+
+
+def test_usage_summary_fills_in_missing_columns():
+    summary = usage_summary([{"model": "model-a"}])
+    row = summary.iloc[0]
+    assert row["framework"] == ""
+    assert row["requests"] == 1
+    assert row["prompt_tokens"] == 0
+    assert row["completion_tokens"] == 0
+    assert summary["cost_usd"].isna().all()
 
 

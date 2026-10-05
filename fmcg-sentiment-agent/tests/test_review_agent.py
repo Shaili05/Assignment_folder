@@ -5,11 +5,11 @@ import pytest
 
 from src.agents import review_agent
 from src.agents.review_agent import (
-    ReviewAgent, audit_copy, build_system_prompt, error_detail, friendly_error, precheck, text_of,
+    ReviewAgent, audit_copy, build_system_prompt, error_detail, precheck, text_of, to_app_error
 )
 from src.config.constants import MAX_TURNS_PER_THREAD
 from src.exceptions.exceptions import (
-    AssistantTimeoutError, AssistantUnavailableError, ConfigurationError, InvalidRoleError, RateLimitError,
+    AgentExecutionError, AssistantTimeoutError, AssistantUnavailableError, ConfigurationError, InvalidRoleError, RateLimitError,
 )
 
 
@@ -63,18 +63,18 @@ def test_audit_copy_keeps_only_the_size_of_tool_output():
     assert tool_call["output_text"] == "abcdef"
 
 
-def test_friendly_error_hides_internal_details():
-    message = friendly_error(RuntimeError("C:\\private\\path with gsk_12345"))
-    assert message == review_agent.GENERIC_ERROR_MESSAGE
+def test_to_app_error_hides_internal_details():
+    message = to_app_error(RuntimeError("C:\\private\\path with gsk_12345")).message
+    assert message == AgentExecutionError.default_message
     assert "gsk_" not in message
 
 
-def test_friendly_error_for_a_rate_limit():
-    assert friendly_error(ProviderError(429)) == RateLimitError.default_message
+def test_to_app_error_for_a_rate_limit():
+    assert to_app_error(ProviderError(429)).message == RateLimitError.default_message
 
 
-def test_friendly_error_keeps_the_message_of_an_app_error():
-    assert friendly_error(ConfigurationError("GROQ_API_KEY not found in .env")) == "GROQ_API_KEY not found in .env"
+def test_to_app_error_keeps_the_message_of_an_app_error():
+    assert to_app_error(ConfigurationError("GROQ_API_KEY not found in .env")).message == "GROQ_API_KEY not found in .env"
 
 
 def test_error_detail_names_the_error_type():

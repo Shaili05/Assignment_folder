@@ -1,0 +1,2 @@
+framework,model,questions,pass_rate_pct,status_pct,tool_pct,facts_pct,grounded_pct,avg_latency_s,avg_prompt_tokens,avg_tool_calls,total_cost_usd
+langgraph,groq:openai/gpt-oss-120b,13,76.9,100.0,100.0,100.0,84.6,14.58,3680,1.1,0.00824

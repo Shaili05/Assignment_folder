@@ -1,10 +1,3 @@
-"""
-test_label_rules.py
-
-Tests for src/data_prep/label_rules.py -- rating-to-sentiment mapping and
-keyword-based aspect detection.
-"""
-
 from src.data_prep.label_rules import rating_to_sentiment, rule_aspects
 
 
@@ -23,7 +16,6 @@ def test_rating_to_sentiment_positive():
 
 
 def test_texture_effectiveness_always_present():
-    """Every review gets texture_effectiveness by default."""
     result = rule_aspects("This is a plain review with no special keywords.")
     assert "texture_effectiveness" in result
 
@@ -45,5 +37,3 @@ def test_availability_keyword_detected():
 
 def test_non_string_input_returns_general():
     assert rule_aspects(None) == "general"
-
-

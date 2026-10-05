@@ -1,22 +1,3 @@
-"""
-review_agent.py
-
-The one review-intelligence agent.
-
-  - LangGraph agent whose tools come from the MCP server (one persistent session)
-  - runs on its own event loop in a background thread, so plain synchronous
-    code (FastAPI services, the evaluation script) can call ask()
-  - one turn = input checks -> agent -> grounding checks -> audit log
-
-MCP connections must be opened and closed from the same task, so the session
-and the agents live inside one long-running task and requests reach it
-through a queue. A session moves to a fresh context window after
-MAX_TURNS_PER_THREAD questions to keep prompt size (latency, tokens) bounded.
-
-Errors inside a turn are logged in full, but the user only sees a short,
-safe message. The technical detail is kept in the audit record (error_detail).
-"""
-
 import asyncio
 import concurrent.futures
 import contextlib
@@ -26,29 +7,40 @@ import sys
 import threading
 import time
 
+from langchain.agents import create_agent
+from langchain_mcp_adapters.client import MultiServerMCPClient
+from langchain_mcp_adapters.tools import load_mcp_tools
+from langchain_openai import ChatOpenAI
+from langgraph.checkpoint.memory import InMemorySaver
+
 from src.agents.roles import allowed_tools, get_role
-from src.config.constants import MAX_TURNS_PER_THREAD
+from src.config.constants import (
+    AGENT_LLM_MAX_RETRIES, AGENT_LLM_TIMEOUT, LLM_TEMPERATURE, MAX_TURNS_PER_THREAD, ROLE_FOCUS,
+    RATE_LIMIT_STATUS_CODE, RECURSION_LIMIT, REQUEST_TIMEOUT, SHUTDOWN_TIMEOUT, STARTUP_TIMEOUT, TOKEN_LIMIT_STATUS_CODE,
+    STAGE_CHECKS_PASSED, STAGE_CHECKS_STOPPED, STAGE_COMPLETED, STAGE_FAILED, STAGE_GROUNDING,
+    STAGE_QUESTION_RECEIVED,
+    EMPTY_ANSWER_MESSAGE,
+)
+
+
 from src.config.prompts import AGENT_PROMPT
 from src.config.settings import REPO_ROOT, resolve_model
 from src.exceptions.exceptions import (
-    AppError, AssistantTimeoutError, AssistantUnavailableError, RateLimitError,
+    AgentExecutionError, AppError, AssistantTimeoutError, AssistantUnavailableError, RateLimitError,
 )
-from src.guardrails.grounding import check_grounding, collect_reviews
-from src.guardrails.input_checks import check_question
+from src.guardrails.grounding import GROUNDING_PROBLEM_KEYS, check_grounding, collect_reviews
+from src.guardrails.input_checks import check_question, check_role_access
 from src.utils.audit_logger import log_interaction
+from src.utils.progress_log import StageCallback, log_stage
 
 logger = logging.getLogger(__name__)
-
-STARTUP_TIMEOUT = 400
-REQUEST_TIMEOUT = 480
-RECURSION_LIMIT = 15
-GENERIC_ERROR_MESSAGE = "The assistant hit an error. Please try again."
 
 
 def build_system_prompt(role):
     info = get_role(role)
     tools = ", ".join(info["tools"])
-    return f"{AGENT_PROMPT}\n\nThe user's role: {info['label']}. You may only use these tools: {tools}."
+    focus = ROLE_FOCUS[role]
+    return f"{AGENT_PROMPT}\n\nThe user's role: {info['label']}. {focus} You may only use these tools: {tools}."
 
 
 def text_of(content):
@@ -63,10 +55,12 @@ def text_of(content):
     return "".join(parts)
 
 
-def precheck(question, has_history):
+def precheck(question, has_history, role=None):
     check = check_question(question)
     if check["status"] == "clarify" and has_history:
-        return {"status": "ok", "message": ""}
+        check = {"status": "ok", "message": ""}
+    if check["status"] == "ok" and role:
+        return check_role_access(question, role) or check
     return check
 
 
@@ -79,16 +73,55 @@ def audit_copy(record):
     return entry
 
 
-def friendly_error(exc):
-    if getattr(exc, "status_code", None) == 429:
-        return RateLimitError.default_message
+def to_app_error(exc):
     if isinstance(exc, AppError):
-        return exc.message
-    return GENERIC_ERROR_MESSAGE
+        return exc
+    if getattr(exc, "status_code", None) in (RATE_LIMIT_STATUS_CODE, TOKEN_LIMIT_STATUS_CODE):
+        return RateLimitError()
+    return AgentExecutionError()
 
 
 def error_detail(exc):
-    return f"{exc.__class__.__name__}: {exc}"
+    cause = exc.__cause__ or exc
+    return f"{cause.__class__.__name__}: {cause}"
+
+
+def latest_turn(messages):
+    last_human = max(i for i, m in enumerate(messages) if m.type == "human")
+    return messages[last_human + 1:]
+
+
+def tool_results_by_call_id(turn):
+    results = {}
+    for message in turn:
+        if message.type == "tool":
+            results[message.tool_call_id] = (text_of(message.content), getattr(message, "status", "success"))
+    return results
+
+
+def summarize_turn(turn):
+    results = tool_results_by_call_id(turn)
+    tool_calls, prompt_tokens, completion_tokens = [], 0, 0
+    for message in turn:
+        if message.type != "ai":
+            continue
+        usage = getattr(message, "usage_metadata", None) or {}
+        prompt_tokens += usage.get("input_tokens", 0)
+        completion_tokens += usage.get("output_tokens", 0)
+        for call in getattr(message, "tool_calls", None) or []:
+            output_text, status = results.get(call["id"], ("", "missing"))
+            tool_calls.append({
+                "name": call["name"], "arguments": call["args"],
+                "output_text": output_text, "ok": status != "error",
+            })
+    return tool_calls, prompt_tokens, completion_tokens
+
+
+def final_answer(turn):
+    final_message = turn[-1] if turn else None
+    if final_message is None or final_message.type != "ai":
+        return EMPTY_ANSWER_MESSAGE
+    return text_of(final_message.content).strip() or EMPTY_ANSWER_MESSAGE
 
 
 class ReviewAgent:
@@ -102,10 +135,10 @@ class ReviewAgent:
         self.llm = None
         self.checkpointer = None
         self.agents = {}
-        self.turns = {}           
-        self.generation = {}      
-        self.turn_counts = {}     
-        self.session_reviews = {} 
+        self.turns = {}
+        self.generation = {}
+        self.turn_counts = {}
+        self.session_reviews = {}
         self.ready = threading.Event()
         self.startup_error = None
         self.queue = None
@@ -155,16 +188,13 @@ class ReviewAgent:
             await self._close()
 
     async def _open(self):
-        from langchain_mcp_adapters.client import MultiServerMCPClient
-        from langchain_mcp_adapters.tools import load_mcp_tools
-        from langchain_openai import ChatOpenAI
-        from langgraph.checkpoint.memory import InMemorySaver
-
         config = resolve_model(self.model_spec)
-        options = {"model": config["model"], "base_url": config["base_url"],
-                   "api_key": config["api_key"], "timeout": 90, "max_retries": 3}
+        options = {
+            "model": config["model"], "base_url": config["base_url"], "api_key": config["api_key"],
+            "timeout": AGENT_LLM_TIMEOUT, "max_retries": AGENT_LLM_MAX_RETRIES,
+        }
         if config["provider"] != "gemini":
-            options["temperature"] = 0.2
+            options["temperature"] = LLM_TEMPERATURE
         self.llm = ChatOpenAI(**options)
         self.checkpointer = InMemorySaver()
 
@@ -190,8 +220,6 @@ class ReviewAgent:
 
     def _get_agent(self, role):
         if role not in self.agents:
-            from langchain.agents import create_agent
-
             permitted = set(allowed_tools(role))
             tools = [t for t in self.tools if t.name in permitted]
             self.agents[role] = create_agent(
@@ -208,72 +236,66 @@ class ReviewAgent:
         self.turns[key] = self.turns.get(key, 0) + 1
         return f"{key}:{self.generation.get(key, 0)}"
 
-    async def _invoke(self, question, role, session_id):
-        agent = self._get_agent(role)
-        config = {
+    def _run_config(self, session_id, role):
+        return {
             "configurable": {"thread_id": self._thread_id_for(session_id, role)},
             "recursion_limit": RECURSION_LIMIT,
+            "callbacks": [StageCallback(session_id, role)],
         }
-        output = await agent.ainvoke({"messages": [{"role": "user", "content": question}]}, config=config)
 
-        messages = output["messages"]
-        last_human = max(i for i, m in enumerate(messages) if m.type == "human")
-        turn = messages[last_human + 1:]
+    async def _invoke(self, question, role, session_id):
+        agent = self._get_agent(role)
+        config = self._run_config(session_id, role)
+        try:
+            output = await agent.ainvoke({"messages": [{"role": "user", "content": question}]}, config=config)
+        except Exception as exc:
+            raise to_app_error(exc) from exc
 
-        results = {}
-        for message in turn:
-            if message.type == "tool":
-                results[message.tool_call_id] = (text_of(message.content), getattr(message, "status", "success"))
+        turn = latest_turn(output["messages"])
+        tool_calls, prompt_tokens, completion_tokens = summarize_turn(turn)
+        return {
+            "answer": final_answer(turn), "tool_calls": tool_calls,
+            "prompt_tokens": prompt_tokens, "completion_tokens": completion_tokens,
+        }
 
-        tool_calls, prompt_tokens, completion_tokens = [], 0, 0
-        for message in turn:
-            if message.type != "ai":
-                continue
-            usage = getattr(message, "usage_metadata", None) or {}
-            prompt_tokens += usage.get("input_tokens", 0)
-            completion_tokens += usage.get("output_tokens", 0)
-            for call in getattr(message, "tool_calls", None) or []:
-                output_text, status = results.get(call["id"], ("", "missing"))
-                tool_calls.append({
-                    "name": call["name"], "arguments": call["args"],
-                    "output_text": output_text, "ok": status != "error",
-                })
-
-        final = turn[-1] if turn else None
-        answer = text_of(final.content).strip() if final is not None and final.type == "ai" else ""
-        if not answer:
-            answer = "I could not produce an answer. Please rephrase the question."
-        return {"answer": answer, "tool_calls": tool_calls,
-                "prompt_tokens": prompt_tokens, "completion_tokens": completion_tokens}
+    def _log_without_answer(self, base, status, answer, latency_sec=0.0, error_detail_text=None):
+        record = {
+            **base, "status": status, "answer": answer, "tool_calls": [],
+            "prompt_tokens": 0, "completion_tokens": 0, "latency_sec": latency_sec, "checks": {},
+        }
+        if error_detail_text:
+            record["error_detail"] = error_detail_text
+        record["interaction_id"] = log_interaction(audit_copy(record), self.audit_path)["interaction_id"]
+        return record
 
     async def _answer_turn(self, question, role, session_id):
         base = {
             "session_id": session_id, "role": role, "framework": self.name,
             "model": self.model_spec, "question": question,
         }
-        check = precheck(question, self.turn_counts.get(session_id, 0) > 0)
+        log_stage(session_id, role, STAGE_QUESTION_RECEIVED, question[:80])
+        check = precheck(question, self.turn_counts.get(session_id, 0) > 0, role)
         if check["status"] != "ok":
-            record = {**base, "status": check["status"], "answer": check["message"], "tool_calls": [],
-                      "prompt_tokens": 0, "completion_tokens": 0, "latency_sec": 0.0, "checks": {}}
-            record["interaction_id"] = log_interaction(audit_copy(record), self.audit_path)["interaction_id"]
-            return record
+            log_stage(session_id, role, STAGE_CHECKS_STOPPED, check["status"])
+            return self._log_without_answer(base, check["status"], check["message"])
 
+        log_stage(session_id, role, STAGE_CHECKS_PASSED)
         started = time.time()
         try:
             raw = await self._invoke(question, role, session_id)
-        except Exception as exc:
+        except AppError as exc:
             logger.exception("The agent failed on a question (session %s, role %s)", session_id, role)
-            record = {**base, "status": "error", "answer": friendly_error(exc),
-                      "error_detail": error_detail(exc), "tool_calls": [],
-                      "prompt_tokens": 0, "completion_tokens": 0,
-                      "latency_sec": round(time.time() - started, 2), "checks": {}}
-            record["interaction_id"] = log_interaction(audit_copy(record), self.audit_path)["interaction_id"]
-            return record
+            log_stage(session_id, role, STAGE_FAILED, error_detail(exc))
+            return self._log_without_answer(
+                base, "error", exc.message, round(time.time() - started, 2), error_detail(exc),
+            )
 
         self.turn_counts[session_id] = self.turn_counts.get(session_id, 0) + 1
         previous = self.session_reviews.get(session_id, {})
         checks = check_grounding(raw["answer"], question, raw["tool_calls"], previous)
         self.session_reviews[session_id] = {**previous, **collect_reviews(raw["tool_calls"])}
+        problems = [name for name in GROUNDING_PROBLEM_KEYS if checks[name]]
+        log_stage(session_id, role, STAGE_GROUNDING, ", ".join(problems) or "ok")
         record = {
             **base, "status": "answered", "answer": raw["answer"], "tool_calls": raw["tool_calls"],
             "prompt_tokens": raw["prompt_tokens"], "completion_tokens": raw["completion_tokens"],
@@ -282,6 +304,7 @@ class ReviewAgent:
         entry = log_interaction(audit_copy(record), self.audit_path)
         record["interaction_id"] = entry["interaction_id"]
         record["cost_usd"] = entry.get("cost_usd")
+        log_stage(session_id, role, STAGE_COMPLETED, f"interaction {entry['interaction_id']}, {record['latency_sec']} s")
         return record
 
     def wait_until_ready(self):
@@ -307,7 +330,7 @@ class ReviewAgent:
     def close(self):
         if self.queue is not None and self.ready.is_set() and not self.startup_error:
             self.loop.call_soon_threadsafe(self.queue.put_nowait, None)
-        self.thread.join(timeout=30)
+        self.thread.join(timeout=SHUTDOWN_TIMEOUT)
         logger.info("The assistant was shut down")
 
 

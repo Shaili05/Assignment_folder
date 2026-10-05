@@ -58,3 +58,8 @@ class ProductSpanResponse(BaseModel):
     count: int
     first: str
     last: str
+
+
+class ProgressResponse(BaseModel):
+    stages: List[Dict[str, Any]]
+

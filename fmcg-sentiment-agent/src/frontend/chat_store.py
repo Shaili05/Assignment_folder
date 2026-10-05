@@ -1,36 +1,15 @@
-"""
-chat_store.py
-File-backed store for assistant conversations.
-
-
-Every conversation is kept as one entry in logs/chat_sessions.json, keyed by
-session id, so the dashboard can list past conversations, reopen them and
-delete them. Tool outputs are dropped before saving: only the tool name and
-its arguments are kept, which keeps the file small and avoids storing review
-text twice (the audit log already holds the full record).
-
-
-This store is for user convenience only. The append-only audit log in
-src/agent/audit.py stays the system of record.
-"""
-
-
 import json
 import threading
 from datetime import datetime, timezone
 from pathlib import Path
-
-REPO_ROOT = Path(__file__).resolve().parents[2]
-STORE_PATH = REPO_ROOT / "logs" / "chat_sessions.json"
-
-MAX_CONVERSATIONS = 50
-TITLE_CHARS = 60
+from src.config.constants import CHAT_MAX_CONVERSATIONS, CHAT_TITLE_CHARS, SUGGESTION_HISTORY_QUESTIONS
+from src.config.settings import CHAT_STORE_PATH
 
 _LOCK = threading.Lock()
 
 
 def _path(path=None):
-    return Path(path or STORE_PATH)
+    return Path(path or CHAT_STORE_PATH)
 
 
 def _read_all(path=None):
@@ -53,22 +32,21 @@ def _write_all(data, path=None):
 
 
 def _trim(data):
-    if len(data) <= MAX_CONVERSATIONS:
+    if len(data) <= CHAT_MAX_CONVERSATIONS:
         return data
     ordered = sorted(data.items(), key=lambda item: item[1].get("updated_at", ""), reverse=True)
-    return dict(ordered[:MAX_CONVERSATIONS])
+    return dict(ordered[:CHAT_MAX_CONVERSATIONS])
 
 
 def make_title(messages):
     for message in messages:
         if message.get("role") == "user" and message.get("content"):
             text = " ".join(str(message["content"]).split())
-            return text[:TITLE_CHARS] + ("..." if len(text) > TITLE_CHARS else "")
+            return text[:CHAT_TITLE_CHARS] + ("..." if len(text) > CHAT_TITLE_CHARS else "")
     return "New conversation"
 
 
 def strip_message(message):
-    """Keep the visible text and a light copy of the turn record."""
     record = message.get("record") or {}
     light_record = None
     if record:
@@ -139,3 +117,18 @@ def clear_all(role=None, path=None):
         else:
             data = {k: v for k, v in data.items() if v.get("role") != role}
         _write_all(data, path)
+
+
+def answered_questions(role, limit=SUGGESTION_HISTORY_QUESTIONS, path=None):
+    entries = [entry for entry in _read_all(path).values() if entry.get("role") == role]
+    entries.sort(key=lambda entry: entry.get("updated_at", ""), reverse=True)
+    questions = []
+    for entry in entries:
+        messages = entry.get("messages", [])
+        for question, reply in reversed(list(zip(messages, messages[1:]))):
+            answered = (reply.get("record") or {}).get("status") == "answered"
+            if question.get("role") == "user" and reply.get("role") == "assistant" and answered:
+                questions.append(question.get("content", ""))
+                if len(questions) == limit:
+                    return questions
+    return questions

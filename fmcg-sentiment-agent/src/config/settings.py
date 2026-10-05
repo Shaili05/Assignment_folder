@@ -1,13 +1,3 @@
-"""
-settings.py
-
-Central app settings: filesystem paths and environment-driven config. Every
-other module that needs REPO_ROOT, REVIEWS_PATH, VECTORSTORE_DIR, or LOGS_DIR
-imports it from here rather than recomputing it.
-
-Fixed values (thresholds, model lists, retrieval parameters) live in constants.py.
-"""
-
 import os
 from pathlib import Path
 
@@ -29,15 +19,24 @@ LABELED_REVIEWS_PATH = REPO_ROOT / "data" / "labeled" / "labeled_reviews.csv"
 VECTORSTORE_DIR = REPO_ROOT / "data" / "vectorstore" / "chroma_db"
 LOGS_DIR = REPO_ROOT / "logs"
 REPORTS_DIR = REPO_ROOT / "reports"
+EVALUATION_DIR = REPO_ROOT / "data" / "evaluation"
+EVAL_RESULTS_PATH = EVALUATION_DIR / "results.csv"
+EVAL_SUMMARY_PATH = EVALUATION_DIR / "summary.csv"
+EVAL_AUDIT_PATH = LOGS_DIR / "evaluation_audit.jsonl"
+AUDIT_LOG_PATH = LOGS_DIR / "audit_log.jsonl"
+PROGRESS_LOG_PATH = LOGS_DIR / "progress_log.jsonl"
+RUN_LOG_PATH = LOGS_DIR / "run_log.csv"
+CHAT_STORE_PATH = LOGS_DIR / "chat_sessions.json"
+
 
 API_TITLE = "Review Intelligence API"
 API_VERSION = "0.1.0"
+API_BASE_URL = os.environ.get("API_BASE_URL", "http://127.0.0.1:8000")
 
 LLM_MODEL = os.environ.get("LLM_MODEL", "openai/gpt-oss-120b")
 
 
 def resolve_model(model_spec):
-    """Turn 'provider:model_id' into base_url, api_key and model id."""
     provider, _, model = model_spec.partition(":")
     if provider not in PROVIDERS or not model:
         raise ConfigurationError(
@@ -48,5 +47,3 @@ def resolve_model(model_spec):
     if not api_key:
         raise ConfigurationError(f"{config['key_env']} not found in .env")
     return {"provider": provider, "model": model, "base_url": config["base_url"], "api_key": api_key}
-
-

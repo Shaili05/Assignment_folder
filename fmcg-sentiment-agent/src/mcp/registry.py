@@ -1,13 +1,10 @@
-"""
-registry.py
-
-Single list of the tools exposed to the agent.
-"""
-
 import contextlib
 import sys
 
-from src.config.constants import ASPECTS, ISSUE_TYPES, SENTIMENTS, SEVERITY_LEVELS
+from src.config.constants import (
+    ASPECTS, FLAGGED_MAX_LIMIT, ISSUE_TYPES, MAX_TOP_K, MAX_TREND_PERIODS, SENTIMENTS, SEVERITY_LEVELS,
+    SUMMARY_MAX_WINDOW_DAYS,
+)
 from src.mcp.tools.flagged_reviews import flagged_reviews
 from src.mcp.tools.sentiment_trend import sentiment_trend
 from src.mcp.tools.summary_report import generate_summary_report
@@ -49,7 +46,7 @@ TOOLS = {
                 "product_name": {"type": "string", "description": "Case-insensitive part of a product name."},
                 "brand_name": {"type": "string", "description": "Case-insensitive part of a brand name."},
                 "granularity": {"type": "string", "enum": ["week", "month"], "description": "Default month."},
-                "periods": {"type": "integer", "minimum": 1, "maximum": 60, "description": "Number of recent periods. Default 6."},
+                "periods": {"type": "integer", "minimum": 1, "maximum": MAX_TREND_PERIODS, "description": "Number of recent periods. Default 6."},
                 "as_of": {"type": "string", "description": AS_OF_NOTE},
             },
             "additionalProperties": False,
@@ -71,7 +68,7 @@ TOOLS = {
                 "end_date": {"type": "string", "description": DATE_NOTE},
                 "product_name": {"type": "string"},
                 "brand_name": {"type": "string"},
-                "limit": {"type": "integer", "minimum": 1, "maximum": 50, "description": "Default 10."},
+                "limit": {"type": "integer", "minimum": 1, "maximum": FLAGGED_MAX_LIMIT, "description": "Default 10."},
                 "as_of": {"type": "string", "description": AS_OF_NOTE},
             },
             "additionalProperties": False,
@@ -87,7 +84,7 @@ TOOLS = {
         "schema": {
             "type": "object",
             "properties": {
-                "window_days": {"type": "integer", "minimum": 1, "maximum": 3650, "description": "Default 7."},
+                "window_days": {"type": "integer", "minimum": 1, "maximum": SUMMARY_MAX_WINDOW_DAYS, "description": "Default 7."},
                 "product_name": {"type": "string"},
                 "brand_name": {"type": "string"},
                 "as_of": {"type": "string", "description": AS_OF_NOTE},
@@ -107,7 +104,7 @@ TOOLS = {
             "type": "object",
             "properties": {
                 "question": {"type": "string", "description": "What to look for, in plain language."},
-                "top_k": {"type": "integer", "minimum": 1, "maximum": 20, "description": "Default 5."},
+                "top_k": {"type": "integer", "minimum": 1, "maximum": MAX_TOP_K, "description": "Default 5."},
                 "aspect": {"type": "string", "enum": ASPECTS},
                 "sentiment": {"type": "string", "enum": SENTIMENTS},
                 "min_rating": {"type": "integer", "minimum": 1, "maximum": 5},
@@ -142,3 +139,5 @@ def call_tool(name, arguments=None):
         return TOOLS[name]["handler"](**arguments)
     except TypeError as exc:
         return {"error": f"Invalid arguments for {name}: {exc}"}
+
+

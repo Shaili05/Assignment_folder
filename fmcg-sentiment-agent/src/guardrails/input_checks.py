@@ -1,21 +1,10 @@
-"""
-input_checks.py
-
-Input checks that run before any model call.
-
-check_question decides whether a question can be answered from reviews:
-  ok            answer it
-  clarify       too broad, ask the user which aspect, product or period
-  out_of_scope  needs information reviews do not contain (policies, offers)
-  blocked       tries to change the assistant's instructions
-  privacy       asks for a reviewer's identity, which was scrubbed from the data
-
-looks_like_injection marks review text that reads like an instruction to the
-model. Review text is always treated as data, this flag only makes it visible.
-"""
-
 import logging
 import re
+
+from src.agents.roles import allowed_tools, can_call
+from src.config.constants import (
+    ROLE_GATE_MESSAGE, ROLE_GATE_RULES, ROLE_GATE_STATUS, ROLE_LABELS, TOOL_LABELS,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -75,7 +64,7 @@ PRIVACY_MESSAGE = (
 )
 
 
-def looks_like_injection(text):
+def matches_injection_pattern(text):
     if not isinstance(text, str):
         return False
     return bool(INJECTION_REGEX.search(text))
@@ -89,7 +78,7 @@ def reject(status, message):
 def check_question(question):
     if not isinstance(question, str) or not question.strip():
         return reject("clarify", CLARIFY_MESSAGE)
-    if looks_like_injection(question):
+    if matches_injection_pattern(question):
         return reject("blocked", BLOCKED_MESSAGE)
     if PRIVACY_REGEX.search(question):
         return reject("privacy", PRIVACY_MESSAGE)
@@ -100,3 +89,22 @@ def check_question(question):
     return {"status": "ok", "message": ""}
 
 
+def join_words(items):
+    if len(items) <= 1:
+        return "".join(items)
+    return ", ".join(items[:-1]) + " and " + items[-1]
+
+
+def check_role_access(question, role):
+    if not isinstance(question, str):
+        return None
+    for tool, rule in ROLE_GATE_RULES.items():
+        if rule["pattern"].search(question) and not can_call(role, tool):
+            allowed_roles = [label for name, label in ROLE_LABELS.items() if can_call(name, tool)]
+            can_do = [TOOL_LABELS.get(name, name).lower() for name in allowed_tools(role)]
+            message = ROLE_GATE_MESSAGE.format(
+                feature=rule["feature"], allowed_roles=join_words(allowed_roles),
+                role_label=ROLE_LABELS[role], can_do=join_words(can_do),
+            )
+            return reject(ROLE_GATE_STATUS, message)
+    return None

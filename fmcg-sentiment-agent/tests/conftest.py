@@ -1,11 +1,3 @@
-"""
-conftest.py
-
-Shared pytest fixtures. Tests use a small in-memory DataFrame instead of the
-real reviews_scrubbed.csv, so they run fast and don't depend on the dataset
-being present or up to date.
-"""
-
 import pandas as pd
 import pytest
 

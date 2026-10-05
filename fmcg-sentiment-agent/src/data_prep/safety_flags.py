@@ -1,27 +1,11 @@
-"""
-safety_flags.py
-
-Rule-based detection of safety and quality issues in review text, with a
-severity score. Shared by the labeling step and the flagged-reviews tool so
-both use the same logic.
-
-Each term carries a type (safety or quality) and a weight (1 low, 2 medium,
-3 high). A term is ignored when a negation word appears shortly before it
-in the same clause ("no rash", "didn't burn", "non-toxic").
-"""
-
 import re
 
-NEGATION_WORDS = {
-    "no", "not", "never", "without", "nothing", "none", "zero", "non",
-    "hardly", "nobody", "neither", "nor", "didnt", "dont", "doesnt", "wont",
-    "wasnt", "isnt", "arent", "havent", "hasnt", "hadnt", "cant", "couldnt",
-    "wouldnt",
-}
-
-NEGATION_WINDOW = 6
-CLAUSE_SPLIT = re.compile(r"[.!?;,:\n]|\bbut\b|\bhowever\b|\bexcept\b")
-WORD_PATTERN = re.compile(r"[a-z]+")
+from src.config.constants import (
+    CLAUSE_SPLIT, EXTRA_TERM_BONUS, EXTRA_TERM_BONUS_CAP, HIGH_SEVERITY_SCORE,
+    IGNORE_FLAGS_AT_RATING, LOW_RATING_BONUS, LOW_RATING_MAX, MEDIUM_SEVERITY_SCORE,
+    NEGATION_LOOKBACK_CHARS, NEGATION_WINDOW, NEGATION_WORDS, NEGATIVE_SENTIMENT_BONUS,
+    SEVERITY_BASE_SCORE, STRONG_TERM_WEIGHT, STRONG_TERMS_ONLY_AT_RATING, WORD_PATTERN,
+)
 
 TERM_TABLE = [
     ("hospital_visit", "safety", 3, r"\bhospital(?!-?\s?grade)\w*|\bemergency room\b|\burgent care\b"),
@@ -56,14 +40,10 @@ TERM_TABLE = [
 
 TERMS = [(label, kind, weight, re.compile(pattern)) for label, kind, weight, pattern in TERM_TABLE]
 
-BASE_SCORE = {1: 0.25, 2: 0.5, 3: 0.75}
-
-
 def is_negated(text, start):
-    segment = CLAUSE_SPLIT.split(text[max(0, start - 60):start])[-1]
+    segment = CLAUSE_SPLIT.split(text[max(0, start - NEGATION_LOOKBACK_CHARS):start])[-1]
     words = WORD_PATTERN.findall(segment.replace("'", ""))[-NEGATION_WINDOW:]
     return any(word in NEGATION_WORDS for word in words)
-
 
 def find_matches(text):
     lowered = text.lower().replace("\u2019", "'")
@@ -74,7 +54,6 @@ def find_matches(text):
                 found[label] = (kind, weight)
                 break
     return found
-
 
 def analyze_review(text, sentiment, rating):
     empty = {
@@ -93,12 +72,12 @@ def analyze_review(text, sentiment, rating):
 
     is_negative = sentiment == "negative"
     has_rating = rating is not None
-    is_low_rating = has_rating and rating <= 2
+    is_low_rating = has_rating and rating <= LOW_RATING_MAX
 
-    if has_rating and rating >= 5:
+    if has_rating and rating >= IGNORE_FLAGS_AT_RATING:
         return empty
-    if has_rating and rating == 4:
-        found = {label: item for label, item in found.items() if item[1] == 3}
+    if has_rating and rating == STRONG_TERMS_ONLY_AT_RATING:
+        found = {label: item for label, item in found.items() if item[1] == STRONG_TERM_WEIGHT}
         if not found:
             return empty
 
@@ -107,15 +86,15 @@ def analyze_review(text, sentiment, rating):
     if top_weight == 1 and not (is_negative or is_low_rating):
         return empty
 
-    score = BASE_SCORE[top_weight]
-    score += min(0.15, 0.05 * (len(found) - 1))
-    score += 0.1 if is_negative else 0.0
-    score += 0.1 if is_low_rating else 0.0
+    score = SEVERITY_BASE_SCORE[top_weight]
+    score += min(EXTRA_TERM_BONUS_CAP, EXTRA_TERM_BONUS * (len(found) - 1))
+    score += NEGATIVE_SENTIMENT_BONUS if is_negative else 0.0
+    score += LOW_RATING_BONUS if is_low_rating else 0.0
     score = round(min(1.0, score), 2)
 
-    if score >= 0.75:
+    if score >= HIGH_SEVERITY_SCORE:
         level = "high"
-    elif score >= 0.5:
+    elif score >= MEDIUM_SEVERITY_SCORE:
         level = "medium"
     else:
         level = "low"
@@ -134,7 +113,6 @@ def analyze_review(text, sentiment, rating):
         "matched_terms": "|".join(sorted(found)),
     }
 
-
 def first_match_position(text):
     lowered = text.lower().replace("\u2019", "'")
     best = None
@@ -145,4 +123,3 @@ def first_match_position(text):
                     best = match.start()
                 break
     return best
-

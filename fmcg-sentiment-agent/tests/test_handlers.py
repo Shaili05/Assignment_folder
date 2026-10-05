@@ -3,7 +3,7 @@ from fastapi.testclient import TestClient
 from pydantic import BaseModel
 
 
-from src.exceptions.exceptions import RateLimitError, ReviewsNotFoundError
+from src.exceptions.exceptions import AssistantUnavailableError, RateLimitError, ReviewsNotFoundError
 from src.exceptions.handlers import register_exception_handlers
 
 
@@ -73,5 +73,18 @@ def test_unexpected_error_hides_internal_details():
     assert "gsk_secret" not in response.text
     assert "RuntimeError" not in response.text
 
+
+
+def test_server_side_app_errors_keep_their_status_and_code():
+    app = FastAPI()
+    register_exception_handlers(app)
+
+    @app.get("/down")
+    def down():
+        raise AssistantUnavailableError()
+
+    response = TestClient(app, raise_server_exceptions=False).get("/down")
+    assert response.status_code == 503
+    assert response.json()["error"]["code"] == "assistant_unavailable"
 
 

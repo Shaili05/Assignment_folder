@@ -1,18 +1,8 @@
-"""
-flagged_reviews.py
-
-
-Tool 2: reviews flagged for a safety or quality issue, sorted by severity.
-severity_level acts as a minimum: "medium" returns medium and high.
-
-
-Run:
-    python -m src.mcp.tools.flagged_reviews --level high --days 365
-"""
-
-
 import logging
 
+from src.config.constants import (
+    FLAGGED_MAX_LIMIT, FLAGGED_REVIEW_EXCERPT_CHARS, ISSUE_CONTEXT_CHARS_BEFORE, ISSUE_TYPES,
+)
 from src.data_prep.safety_flags import first_match_position
 from src.repositories.review_repository import (
     SEVERITY_LEVELS, apply_filters, get_as_of_date, in_window, load_reviews, window_bounds,
@@ -21,18 +11,14 @@ from src.repositories.review_repository import (
 
 logger = logging.getLogger(__name__)
 
-ISSUE_TYPES = ["safety", "quality", "both"]
-EXCERPT_CHARS = 400
-
 
 def issue_excerpt(text):
     position = first_match_position(text)
-    if position is None or len(text) <= EXCERPT_CHARS:
-        return text[:EXCERPT_CHARS]
-    start = max(0, position - 150)
-    end = min(len(text), start + EXCERPT_CHARS)
+    if position is None or len(text) <= FLAGGED_REVIEW_EXCERPT_CHARS:
+        return text[:FLAGGED_REVIEW_EXCERPT_CHARS]
+    start = max(0, position - ISSUE_CONTEXT_CHARS_BEFORE)
+    end = min(len(text), start + FLAGGED_REVIEW_EXCERPT_CHARS)
     return ("..." if start > 0 else "") + text[start:end] + ("..." if end < len(text) else "")
-
 
 def flagged_reviews(severity_level=None, issue_type=None, last_n_days=None, start_date=None,
                     end_date=None, product_name=None, brand_name=None, limit=10, as_of=None,
@@ -42,7 +28,8 @@ def flagged_reviews(severity_level=None, issue_type=None, last_n_days=None, star
             raise ValueError(f"severity_level must be one of: {', '.join(SEVERITY_LEVELS)}")
         if issue_type and issue_type not in ISSUE_TYPES:
             raise ValueError(f"issue_type must be one of: {', '.join(ISSUE_TYPES)}")
-        limit = max(1, min(int(limit), 50))
+        limit = max(1, min(int(limit), FLAGGED_MAX_LIMIT))
+
 
         df = load_reviews() if df is None else df
         as_of_date = get_as_of_date(df, as_of)
@@ -52,7 +39,6 @@ def flagged_reviews(severity_level=None, issue_type=None, last_n_days=None, star
     except ValueError as exc:
         logger.warning("flagged_reviews rejected the request: %s", exc)
         return {"error": str(exc)}
-
 
     data = data[data["is_safety_issue"]]
     if severity_level:
@@ -91,4 +77,3 @@ def flagged_reviews(severity_level=None, issue_type=None, last_n_days=None, star
         "counts_by_issue_type": {t: int((data["issue_type"] == t).sum()) for t in ISSUE_TYPES},
         "reviews": reviews,
     }
-

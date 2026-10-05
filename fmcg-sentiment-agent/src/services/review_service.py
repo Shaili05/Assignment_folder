@@ -1,18 +1,9 @@
-"""
-review_service.py
-
-
-Business logic between the routers and the review tools. Tool errors and
-missing data are raised as domain exceptions; exception handlers turn them
-into HTTP responses.
-"""
-
 from src.exceptions.exceptions import InvalidRequestError, ReviewsNotFoundError
 from src.mcp.tools.flagged_reviews import flagged_reviews
 from src.mcp.tools.sentiment_trend import sentiment_trend
 from src.mcp.tools.summary_report import generate_summary_report
 from src.repositories.review_repository import (
-    ASPECTS, SEVERITY_LEVELS, get_as_of_date, load_reviews, sentiment_counts,
+    ASPECTS, SEVERITY_LEVELS, load_reviews, sentiment_counts,
 )
 
 
@@ -33,8 +24,6 @@ def get_sentiment_trend(aspect, product_name, brand_name, granularity, periods, 
     ))
 
 
-
-
 def get_flagged_reviews(severity_level, issue_type, last_n_days, start_date, end_date,
                         product_name, brand_name, limit, as_of, full_text=False):
     return check_result(flagged_reviews(
@@ -51,8 +40,6 @@ def get_flagged_reviews(severity_level, issue_type, last_n_days, start_date, end
     ))
 
 
-
-
 def get_overview(window_days, as_of, product_name, brand_name):
     return check_result(generate_summary_report(
         window_days=window_days,
@@ -60,8 +47,6 @@ def get_overview(window_days, as_of, product_name, brand_name):
         product_name=product_name,
         brand_name=brand_name,
     ))
-
-
 
 
 def get_all_time_stats():
@@ -108,8 +93,3 @@ def get_product_span(product_name=None):
         "first": str(frame["submission_time"].min().date()),
         "last": str(frame["submission_time"].max().date()),
     }
-
-
-def get_data_as_of():
-    frame = load_reviews()
-    return str(get_as_of_date(frame).date())

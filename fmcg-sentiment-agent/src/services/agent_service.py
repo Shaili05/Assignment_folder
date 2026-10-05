@@ -1,16 +1,10 @@
-"""
-agent_service.py
-
-Owns one ReviewAgent per model, reused across requests so the MCP session
-is not reopened on every call. Errors are raised as domain exceptions and
-turned into HTTP responses by the exception handlers.
-"""
-
 import logging
 
 from src.agents.review_agent import ReviewAgent
-from src.config.constants import DEFAULT_MODEL
+from src.config.constants import AVAILABLE_MODELS, DEFAULT_MODEL
+from src.exceptions.exceptions import InvalidRequestError
 from src.utils.audit_logger import new_session_id
+from src.utils.progress_log import read_progress
 
 logger = logging.getLogger(__name__)
 
@@ -19,6 +13,8 @@ _agents = {}
 
 def get_runtime(model=None):
     model = model or DEFAULT_MODEL
+    if model not in AVAILABLE_MODELS:
+        raise InvalidRequestError(f"Unknown model '{model}'. Choose one of: {', '.join(AVAILABLE_MODELS)}")
     if model not in _agents:
         logger.info("Creating the assistant for %s", model)
         _agents[model] = ReviewAgent(model)
@@ -55,3 +51,5 @@ def close_runtimes():
     _agents.clear()
 
 
+def get_progress(session_id):
+    return {"stages": read_progress(session_id)}

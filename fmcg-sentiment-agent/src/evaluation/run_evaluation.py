@@ -1,50 +1,16 @@
-"""
-run_evaluation.py
-
-Runs the evaluation questions through the agent for each model and scores every
-answer automatically:
-
-  status    the expected outcome (answered, clarify, out_of_scope, blocked)
-  tool      the right tool was called, and no forbidden tool
-  facts     the numbers and ids computed from the data appear in the answer
-  grounded  no invalid citations and no quotes missing from the reviews
-  passed    all of the above
-
-Results go to data/evaluation/results.csv and summary.csv. Running a question
-again replaces its old row, so a few questions can be re-run with --ids.
-The dashboard Evaluation tab reads these files.
-
-Run:
-    python -m src.evaluation.run_evaluation --models groq:openai/gpt-oss-120b
-    python -m src.evaluation.run_evaluation --ids lowest_aspect packaging_evidence
-"""
-
 import logging
 
 import pandas as pd
 
 from src.agents.review_agent import ReviewAgent
-from src.config.constants import DEFAULT_MODEL
-from src.config.settings import LOGS_DIR, REPO_ROOT
+from src.config.constants import DEFAULT_MODEL, DEFAULT_ROLE, EVAL_ANSWER_CHARS, EVAL_ROW_FIELDS
+from src.config.settings import EVAL_AUDIT_PATH, EVAL_RESULTS_PATH, EVAL_SUMMARY_PATH, EVALUATION_DIR
 from src.evaluation.eval_questions import build_questions, matches
 from src.exceptions.exceptions import AppError
 from src.utils.audit_logger import new_session_id
 from src.utils.output import write_line
 
 logger = logging.getLogger(__name__)
-
-OUTPUT_DIR = REPO_ROOT / "data" / "evaluation"
-RESULTS_PATH = OUTPUT_DIR / "results.csv"
-SUMMARY_PATH = OUTPUT_DIR / "summary.csv"
-AUDIT_PATH = LOGS_DIR / "evaluation_audit.jsonl"
-
-
-ROW_FIELDS = [
-    "status", "passed", "status_ok", "tool_ok", "facts_ok", "citations_ok", "grounded_ok",
-    "unsupported_numbers", "invalid_citations", "unsupported_quotes", "tool_call_count",
-    "tools_called", "latency_sec", "prompt_tokens", "completion_tokens", "cost_usd", "answer",
-]
-
 
 def score_question(question, record):
     answer = record.get("error_detail") or record.get("answer", "")
@@ -85,10 +51,9 @@ def score_question(question, record):
         "prompt_tokens": record.get("prompt_tokens", 0),
         "completion_tokens": record.get("completion_tokens", 0),
         "cost_usd": record.get("cost_usd") or 0.0,
-        "answer": answer.replace("\n", " ")[:600],
+        "answer": answer.replace("\n", " ")[:EVAL_ANSWER_CHARS],
     }
-    return {field: row[field] for field in ROW_FIELDS}
-
+    return {field: row[field] for field in EVAL_ROW_FIELDS}
 
 def failed_row(message):
     row = {
@@ -96,14 +61,13 @@ def failed_row(message):
         "citations_ok": False, "grounded_ok": False, "unsupported_numbers": 0,
         "invalid_citations": "", "unsupported_quotes": "", "tool_call_count": 0, "tools_called": "",
         "latency_sec": 0.0, "prompt_tokens": 0, "completion_tokens": 0, "cost_usd": 0.0,
-        "answer": message[:600],
+        "answer": message[:EVAL_ANSWER_CHARS],
     }
-    return {field: row[field] for field in ROW_FIELDS}
-
+    return {field: row[field] for field in EVAL_ROW_FIELDS}
 
 def run_pair(model, questions):
     write_line(f"{model}: starting the agent")
-    agent = ReviewAgent(model, audit_path=AUDIT_PATH)
+    agent = ReviewAgent(model, audit_path=EVAL_AUDIT_PATH)
     framework = agent.name
     try:
         agent.wait_until_ready()
@@ -119,7 +83,7 @@ def run_pair(model, questions):
         for question in questions:
             session_id = sessions.setdefault(question["session"], new_session_id())
             try:
-                record = agent.ask(question["question"], question.get("role", "brand_manager"), session_id)
+                record = agent.ask(question["question"], question.get("role", DEFAULT_ROLE), session_id)
                 scored = score_question(question, record)
             except Exception as exc:
                 logger.warning("Question %s failed: %s", question["id"], exc)
@@ -130,7 +94,6 @@ def run_pair(model, questions):
     finally:
         agent.close()
     return rows
-
 
 def summarize(results):
     rows = []
@@ -153,7 +116,6 @@ def summarize(results):
     summary = pd.DataFrame(rows)
     return summary.sort_values(["pass_rate_pct", "avg_latency_s"], ascending=[False, True]).reset_index(drop=True)
 
-
 def run(models=None, ids=None):
     models = models or [DEFAULT_MODEL]
     questions = build_questions()
@@ -165,9 +127,8 @@ def run(models=None, ids=None):
         questions = [q for q in questions if q["id"] in ids]
     write_line(f"{len(questions)} questions, {len(models)} model(s) to run")
 
-
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-    results = pd.read_csv(RESULTS_PATH) if RESULTS_PATH.exists() else pd.DataFrame()
+    EVALUATION_DIR.mkdir(parents=True, exist_ok=True)
+    results = pd.read_csv(EVAL_RESULTS_PATH) if EVAL_RESULTS_PATH.exists() else pd.DataFrame()
     if not results.empty:
         results = results[results["framework"] == ReviewAgent.name]
 
@@ -179,9 +140,8 @@ def run(models=None, ids=None):
             stale = (results["model"] == model) & results["id"].isin(ran)
             results = results[~stale]
         results = pd.concat([results, pd.DataFrame(rows)], ignore_index=True)
-        results.to_csv(RESULTS_PATH, index=False)
-        summarize(results).to_csv(SUMMARY_PATH, index=False)
-
+        results.to_csv(EVAL_RESULTS_PATH, index=False)
+        summarize(results).to_csv(EVAL_SUMMARY_PATH, index=False)
 
     summary = summarize(results)
     best = summary.iloc[0]
@@ -189,5 +149,4 @@ def run(models=None, ids=None):
     write_line(summary.to_string(index=False))
     write_line("")
     write_line(f"Best so far: {best['model']} ({best['pass_rate_pct']}% passed, {best['avg_latency_s']}s average)")
-    write_line(f"Wrote {RESULTS_PATH} and {SUMMARY_PATH}")
-
+    write_line(f"Wrote {EVAL_RESULTS_PATH} and {EVAL_SUMMARY_PATH}")

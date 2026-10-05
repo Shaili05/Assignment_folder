@@ -1,18 +1,6 @@
-"""
-label_rules.py
-
-Rule-based sentiment and aspect labels.
-
-Sentiment follows the star rating (1-2 negative, 3 neutral, 4-5 positive).
-On the hand-checked gold set this scored far higher than the local
-DistilBERT sentiment model.
-
-Aspects come from keyword rules. texture_effectiveness is the default aspect
-because almost every review talks about how the product works or feels. The
-other three aspects are added when their keywords appear.
-"""
-
 import re
+from src.config.constants import ASPECTS
+
 
 PRICE_PATTERN = re.compile(
     r"\bpric\w*|\bexpensive\b|\bcheap\w*|\bworth\b|\bcost\w*|\bmoney\b|\bafford\w*"
@@ -34,8 +22,6 @@ AVAILABILITY_PATTERN = re.compile(
     re.I,
 )
 
-ASPECT_ORDER = ["packaging", "price", "texture_effectiveness", "availability"]
-
 
 def rating_to_sentiment(rating):
     if rating <= 2:
@@ -55,6 +41,4 @@ def rule_aspects(text):
         found.add("packaging")
     if AVAILABILITY_PATTERN.search(text):
         found.add("availability")
-    return ", ".join(a for a in ASPECT_ORDER if a in found)
-
-
+    return ", ".join(a for a in ASPECTS if a in found)

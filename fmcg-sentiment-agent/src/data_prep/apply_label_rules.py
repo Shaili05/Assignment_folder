@@ -1,16 +1,3 @@
-"""
-apply_label_rules.py
-
-Replaces the sentiment and aspect labels in the labeled and scrubbed CSVs with
-the rule-based labels from label_rules.py, recomputes the safety/quality flags
-with the new sentiment, and syncs the Chroma metadata. No re-embedding needed.
-
-The previous files are kept once as *_before_label_fix.csv.
-
-Run:
-    python src/data_prep/apply_label_rules.py
-"""
-
 import logging
 import shutil
 from pathlib import Path
@@ -20,7 +7,8 @@ import pandas as pd
 
 
 from src.config.settings import LABELED_REVIEWS_PATH, REVIEWS_PATH, VECTORSTORE_DIR
-from src.data_prep.label_rules import ASPECT_ORDER, rating_to_sentiment, rule_aspects
+from src.data_prep.label_rules import rating_to_sentiment, rule_aspects
+from src.config.constants import ASPECTS
 from src.data_prep.recompute_safety_flags import FLAG_COLUMNS, sync_chroma
 from src.data_prep.safety_flags import analyze_review
 from src.utils.output import write_line
@@ -79,8 +67,7 @@ def run(labeled=None, scrubbed=None, chroma_dir=None, collection="reviews", skip
     if scrubbed_df is None:
         raise SystemExit("Scrubbed CSV not found, nothing to sync.")
 
-
-    counts = {a: int(scrubbed_df["aspects"].str.contains(a).sum()) for a in ASPECT_ORDER}
+    counts = {a: int(scrubbed_df["aspects"].str.contains(a).sum()) for a in ASPECTS}
     write_line(f"Aspect counts: {counts}")
 
 
@@ -96,5 +83,3 @@ def run(labeled=None, scrubbed=None, chroma_dir=None, collection="reviews", skip
         params=f"scrubbed={scrubbed}, labeled={labeled}, skip_chroma={skip_chroma}",
         summary=f"sentiment={scrubbed_df['sentiment'].value_counts().to_dict()}, aspects={counts}",
     )
-
-

@@ -1,11 +1,3 @@
-"""
-main.py
-
-
-FastAPI application: routers, exception handlers and startup.
-"""
-
-
 import logging
 from contextlib import asynccontextmanager
 
@@ -27,8 +19,6 @@ configure_logging()
 logger = logging.getLogger(__name__)
 
 
-
-
 @asynccontextmanager
 async def lifespan(app):
     logger.info("Starting the assistant.")
@@ -36,8 +26,6 @@ async def lifespan(app):
     yield
     logger.info("Shutting down the assistant.")
     close_runtimes()
-
-
 
 
 app = FastAPI(title=API_TITLE, version=API_VERSION, lifespan=lifespan)

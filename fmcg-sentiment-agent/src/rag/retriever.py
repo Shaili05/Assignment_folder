@@ -1,12 +1,3 @@
-"""
-retriever.py
-
-
-Semantic search over the review vector store (ChromaDB, sentence-t5-base).
-Every result carries the review id so answers can cite the exact reviews.
-Reviewer identity fields are never returned.
-"""
-
 import logging
 import numpy as np
 import pandas as pd
@@ -18,7 +9,7 @@ from src.config.constants import (
 )
 from src.config.settings import VECTORSTORE_DIR
 from src.exceptions.exceptions import VectorStoreUnavailableError
-from src.guardrails.input_checks import looks_like_injection
+from src.guardrails.input_checks import matches_injection_pattern
 
 logger = logging.getLogger(__name__)
 
@@ -104,8 +95,6 @@ def search_reviews(question, top_k=TOP_K, aspect=None, sentiment=None, min_ratin
         return {"error": str(exc)}
 
 
-
-
     n_results = top_k * 5 if aspect else top_k
     result = get_collection().query(
         query_embeddings=[embed_query(question)],
@@ -131,7 +120,7 @@ def search_reviews(question, top_k=TOP_K, aspect=None, sentiment=None, min_ratin
             "is_safety_issue": bool(meta.get("is_safety_issue", False)),
             "severity_level": meta.get("severity_level", ""),
             "similarity": round(1 - dist, 3),
-            "instruction_like": looks_like_injection(doc),
+            "instruction_like": matches_injection_pattern(doc),
         })
         if len(reviews) == top_k:
             break

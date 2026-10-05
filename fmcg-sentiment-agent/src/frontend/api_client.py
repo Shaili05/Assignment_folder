@@ -1,27 +1,17 @@
-"""
-api_client.py
-
-Thin HTTP wrapper around the FastAPI backend. Every function here mirrors
-one backend endpoint; the rest of the frontend never builds a URL or calls
-requests directly.
-"""
-
-import os
-
 import requests
 import streamlit as st
+from src.config.constants import API_TIMEOUT_SEC
+from src.config.settings import API_BASE_URL
 
-API_BASE_URL = os.environ.get("API_BASE_URL", "http://127.0.0.1:8000")
-TIMEOUT = 300
 
 def _get(path, params=None):
-    response = requests.get(f"{API_BASE_URL}{path}", params=params, timeout=TIMEOUT)
+    response = requests.get(f"{API_BASE_URL}{path}", params=params, timeout=API_TIMEOUT_SEC)
     response.raise_for_status()
     return response.json()
 
 
 def _post(path, json=None):
-    response = requests.post(f"{API_BASE_URL}{path}", json=json, timeout=TIMEOUT)
+    response = requests.post(f"{API_BASE_URL}{path}", json=json, timeout=API_TIMEOUT_SEC)
     response.raise_for_status()
     return response.json()
 
@@ -45,11 +35,6 @@ def get_product_span(product_name):
         if exc.response is not None and exc.response.status_code == 404:
             return None
         raise
-
-
-@st.cache_data(show_spinner=False)
-def get_data_as_of_date():
-    return _get("/dashboard/as-of")["as_of_date"]
 
 
 def get_trends(product_name=None, granularity="month", periods=6, as_of=None):
@@ -84,3 +69,9 @@ def get_audit_logs(role, session_id=None):
     if session_id:
         params["session_id"] = session_id
     return _get("/audit/logs", params=params)
+
+
+def get_progress(session_id):
+    return _get("/assistant/progress", params={"session_id": session_id})
+
+
