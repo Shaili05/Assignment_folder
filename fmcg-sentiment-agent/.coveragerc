@@ -1,0 +1,15 @@
+# Coverage settings: measure the backend only.
+# The Streamlit UI is excluded because pytest does not run it.
+
+[run]
+source = src
+omit =
+    src/frontend/app.py
+
+[report]
+show_missing = True
+skip_empty = True
+exclude_lines =
+    pragma: no cover
+    if __name__ == .__main__.:
+

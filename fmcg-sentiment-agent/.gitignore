@@ -1,0 +1,26 @@
+﻿# Secrets
+.env
+!.env.example
+.streamlit/secrets.toml
+/config/
+
+# Python and environment
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Editor folders
+.vscode/
+
+# Data and runtime output
+data/
+logs/
+
+# Local scratch and archives
+archive/
+structure.txt
+
+
