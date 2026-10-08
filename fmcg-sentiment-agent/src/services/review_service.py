@@ -1,3 +1,13 @@
+from datetime import datetime
+
+import pandas as pd
+
+from src.config.constants import (
+    PROFILE_COLUMN_DESCRIPTIONS, PROFILE_DATASET, PROFILE_DERIVED_COLUMNS, PROFILE_EXAMPLE_CHARS,
+    PROFILE_EXAMPLE_COUNT, PROFILE_EXCLUDED_COLUMNS, PROFILE_FREQUENCY_LIMIT,
+    PROFILE_MAX_DISTINCT_FOR_FREQUENCIES, PROFILE_PROJECT_COLUMNS, PROFILE_SENSITIVE_COLUMNS,
+)
+
 from src.exceptions.exceptions import InvalidRequestError, ReviewsNotFoundError
 from src.mcp.tools.flagged_reviews import flagged_reviews
 from src.mcp.tools.sentiment_trend import sentiment_trend
@@ -93,3 +103,98 @@ def get_product_span(product_name=None):
         "first": str(frame["submission_time"].min().date()),
         "last": str(frame["submission_time"].max().date()),
     }
+
+def column_kind(series):
+    if pd.api.types.is_bool_dtype(series):
+        return "boolean"
+    if pd.api.types.is_datetime64_any_dtype(series):
+        return "date"
+    if pd.api.types.is_integer_dtype(series):
+        return "integer"
+    if pd.api.types.is_float_dtype(series):
+        return "decimal"
+    return "text"
+
+
+def column_source(name):
+    if name in PROFILE_DERIVED_COLUMNS:
+        return "derived"
+    if name in PROFILE_PROJECT_COLUMNS:
+        return "project"
+    return "kaggle"
+
+def shorten_example(text):
+    text = " ".join(str(text).split())
+    if len(text) <= PROFILE_EXAMPLE_CHARS:
+        return text
+    return text[:PROFILE_EXAMPLE_CHARS].rstrip() + "..."
+
+
+def format_value(value, kind):
+    if kind == "date":
+        return value.strftime("%d-%b-%Y")
+    if kind == "integer":
+        return str(int(value))
+    if kind == "decimal":
+        return f"{value:g}"
+    if kind == "boolean":
+        return str(bool(value))
+    return shorten_example(value)
+
+
+def column_profile(name, series):
+    kind = column_kind(series)
+    text = series.astype("string")
+    filled = series.notna() & text.str.strip().ne("")
+    values = series[filled]
+    total = len(series)
+    distinct = int(values.nunique())
+    entry = {
+        "name": name,
+        "kind": kind,
+        "source": column_source(name),
+        "description": PROFILE_COLUMN_DESCRIPTIONS.get(name, ""),
+        "null_count": int(total - filled.sum()),
+        "percent_populated": round(100 * int(filled.sum()) / total, 2),
+        "distinct_count": distinct,
+        "minimum": None,
+        "maximum": None,
+        "max_length": None,
+        "examples": [],
+        "frequencies": [],
+    }
+    if kind in ("integer", "decimal", "date") and len(values):
+        entry["minimum"] = format_value(values.min(), kind)
+        entry["maximum"] = format_value(values.max(), kind)
+    if kind == "text" and len(values):
+        entry["max_length"] = int(text[filled].str.len().max())
+    if name not in PROFILE_SENSITIVE_COLUMNS:
+        entry["examples"] = [
+            format_value(value, kind) for value in values.drop_duplicates().head(PROFILE_EXAMPLE_COUNT)
+        ]
+    if kind != "date" and name not in PROFILE_SENSITIVE_COLUMNS and 0 < distinct <= PROFILE_MAX_DISTINCT_FOR_FREQUENCIES:
+        counts = values.value_counts().head(PROFILE_FREQUENCY_LIMIT)
+        entry["frequencies"] = [
+            {"value": str(value), "count": int(count), "percent": round(100 * int(count) / total, 2)}
+            for value, count in counts.items()
+        ]
+    return entry
+
+
+
+def get_data_profile():
+    frame = load_reviews()
+    columns = [
+        column_profile(name, frame[name]) for name in frame.columns if name not in PROFILE_EXCLUDED_COLUMNS
+    ]
+    return {
+        "dataset": PROFILE_DATASET["name"],
+        "source": PROFILE_DATASET["source"],
+        "source_url": PROFILE_DATASET["url"],
+        "file": PROFILE_DATASET["file"],
+        "row_count": len(frame),
+        "column_count": len(columns),
+        "generated_at": datetime.now().strftime("%d %b %Y %H:%M"),
+        "columns": columns,
+    }
+

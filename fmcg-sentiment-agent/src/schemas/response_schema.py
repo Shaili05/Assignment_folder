@@ -63,3 +63,35 @@ class ProductSpanResponse(BaseModel):
 class ProgressResponse(BaseModel):
     stages: List[Dict[str, Any]]
 
+
+class ProfileFrequency(BaseModel):
+    value: str
+    count: int
+    percent: float
+
+
+class ColumnProfile(BaseModel):
+    name: str
+    kind: str
+    source: str
+    description: str
+    null_count: int
+    percent_populated: float
+    distinct_count: int
+    minimum: Optional[str] = None
+    maximum: Optional[str] = None
+    max_length: Optional[int] = None
+    examples: List[str]
+    frequencies: List[ProfileFrequency]
+
+
+class DataProfileResponse(BaseModel):
+    dataset: str
+    source: str
+    source_url: str
+    file: str
+    row_count: int
+    column_count: int
+    generated_at: str
+    columns: List[ColumnProfile]
+

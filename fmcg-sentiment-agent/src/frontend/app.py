@@ -4,6 +4,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 import base64
+from html import escape as html_escape
 import threading
 import time
 import uuid
@@ -17,14 +18,15 @@ import streamlit.components.v1 as components
 
 from src.frontend import api_client, chat_store, suggestions
 from src.config.constants import (
-    AVAILABLE_MODELS, DEFAULT_MODEL, LOW_SAMPLE_THRESHOLD, MAX_TREND_PERIODS, PROGRESS_POLL_SEC, ROLE_LABELS,
-    SENTIMENTS, SEVERITY_LEVELS, STAGE_LABELS, STAGE_TOOL_START, TOOL_LABELS,
+    AVAILABLE_MODELS, DEFAULT_MODEL, LOW_SAMPLE_THRESHOLD, MAX_TREND_PERIODS, PROFILE_SENSITIVE_COLUMNS,
+    PROGRESS_POLL_SEC, ROLE_LABELS, SENTIMENTS, SEVERITY_LEVELS, STAGE_LABELS, STAGE_TOOL_START, TOOL_LABELS,
 )
+
 
 st.set_page_config(page_title="Review Intelligence", layout="wide")
 
 
-BRAND_SECTIONS = ["Overview", "Trends", "Flagged reviews", "Assistant"]
+BRAND_SECTIONS = ["Overview", "Trends", "Flagged reviews", "Assistant", "Audit log"]
 SUPPORT_SECTIONS = ["Flagged reviews", "Assistant", "Audit log"]
 
 SENTIMENT_COLORS = {"positive": "#2fa860", "neutral": "#8a8f98", "negative": "#d6423c"}
@@ -154,6 +156,96 @@ h1, h2, h3, h4 {{
 .block-container, [data-testid="stMainBlockContainer"] {{
     padding-top: 2.5rem;
 }}
+.flag-table {{
+    width: 100%;
+    table-layout: fixed;
+    border-collapse: collapse;
+    font-size: 0.87rem;
+}}
+.flag-table th {{
+    background: #10151c;
+    color: #eef3f8;
+    text-align: left;
+    padding: 8px 10px;
+    border-bottom: 1px solid rgba(150, 150, 150, 0.3);
+    white-space: nowrap;
+}}
+.flag-table td {{
+    padding: 7px 10px;
+    border-bottom: 1px solid rgba(150, 150, 150, 0.12);
+    vertical-align: top;
+    word-break: break-word;
+}}
+.flag-table td.nowrap {{ white-space: nowrap; }}
+.flag-table tr:hover td {{ background: rgba(128, 128, 128, 0.12); }}
+.flag-table summary {{
+    display: block;
+    cursor: pointer;
+    list-style: none;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}}
+.flag-table summary::-webkit-details-marker {{ display: none; }}
+.flag-table details[open] summary {{
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+}}
+.flag-table th.edge .flag-tip {{ left: auto; right: 0; }}
+[data-testid="stTooltipIcon"] svg {{ display: none; }}
+[data-testid="stTooltipIcon"]::after {{
+    content: "\\24D8";
+    font-size: 1.05rem;
+    line-height: 1;
+}}
+[data-testid="stDialog"] div[role="dialog"] {{ width: min(1250px, 96vw); }}
+.profile-head {{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem 2.5rem;
+    padding: 0.9rem 1.1rem;
+    margin-bottom: 1rem;
+    border: 1px solid rgba(150, 150, 150, 0.3);
+    border-radius: 8px;
+}}
+.profile-item .label {{
+    font-size: 0.72rem;
+    opacity: 0.7;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}}
+.profile-item .value {{ font-weight: 600; }}
+.profile-scroll {{
+    max-height: 50vh;
+    overflow: auto;
+    border: 1px solid rgba(150, 150, 150, 0.3);
+    border-radius: 8px;
+}}
+.profile-table {{
+    width: 100%;
+    table-layout: fixed;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+}}
+.profile-table th {{
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: #10151c;
+    color: #eef3f8;
+    text-align: left;
+    padding: 8px 10px;
+}}
+.profile-table td {{
+    padding: 7px 10px;
+    border-bottom: 1px solid rgba(150, 150, 150, 0.15);
+    vertical-align: top;
+    word-break: break-word;
+}}
+.profile-table .name {{ font-weight: 600; }}
+.profile-table .desc {{ font-size: 0.74rem; opacity: 0.7; margin-top: 2px; }}
+.profile-table .muted {{ opacity: 0.6; font-style: italic; }}
 </style>
 """
 
@@ -329,6 +421,9 @@ def severity_chart(severity_counts, issue_type_counts):
 def show_overview():
     stats = api_client.get_dashboard_stats()
     overall = stats["overall"]
+    _, profile_column = st.columns([5, 1])
+    if profile_column.button("Data profile", key="open_profile", width="stretch"):
+        show_data_profile()
 
     cols = st.columns(5)
     cols[0].metric("Reviews", f"{stats['total_reviews']:,}")
@@ -373,11 +468,14 @@ def trend_frame(series, start_date, granularity):
 
 
 def show_trends():
-    intro = st.empty()
-    intro.markdown("Choose a product and a date range to see how sentiment moved over time.")
+    st.markdown("Choose a product and a date range to see how sentiment moved over time.")
 
-    controls = st.columns([3, 1, 1.3, 1.3])
-    product = controls[0].selectbox("Product", api_client.get_product_options(), key="trend_product")
+    controls = st.columns([3, 1, 1.3, 1.3], vertical_alignment="bottom")
+    picked_product = controls[0].selectbox(
+        "Product", api_client.get_product_options(), index=None,
+        placeholder="Search a product or choose All products", key="trend_product",
+    )
+    product = picked_product or "All products"
     granularity = controls[1].selectbox("Group by", ["month", "week", "year"], key="trend_granularity")
 
     span = api_client.get_product_span(product)
@@ -393,17 +491,17 @@ def show_trends():
         st.session_state["trend_product_prev"] = product
 
     default_start = max(min_date, max_date - timedelta(days=180))
-    intro.markdown(
-        "Choose a product and a date range to see how sentiment moved over time.",
-        help=f"Reviews for this selection run from {min_date:%d %b %Y} to {max_date:%d %b %Y}. "
-             "Dates outside this range cannot be picked.",
-    )
     start_date = controls[2].date_input(
         "Start date", value=default_start, min_value=min_date, max_value=max_date, key="trend_start",
+        help=f"Reviews for this selection begin on {min_date:%d %b %Y}, "
+             "so earlier dates cannot be picked.",
     )
     end_date = controls[3].date_input(
         "End date", value=max_date, min_value=min_date, max_value=max_date, key="trend_end",
+        help=f"Reviews for this selection end on {max_date:%d %b %Y}, "
+             "so later dates cannot be picked.",
     )
+
 
     if start_date > end_date:
         st.warning("The start date must be before the end date.")
@@ -474,6 +572,39 @@ def show_trends():
         st.caption(" and ".join(parts).capitalize() + " — treat those points as noisy.")
 
 
+FLAGGED_COLUMN_WIDTHS = {
+    "Review ID": "10%", "Date": "11%", "Stars": "7%", "Product": "22%",
+    "Issue": "8%", "Severity": "10%", "What the review says": "32%",
+}
+
+def flagged_date(value):
+    return pd.Timestamp(value).strftime("%d %b %Y")
+
+
+
+def flagged_row(review):
+    text = html_escape(" ".join(review["review_text"].split()))
+    return (
+        f"<tr><td>{review['review_id']}</td>"
+        f"<td class='nowrap'>{flagged_date(review['submission_time'])}</td>"
+        f"<td>{review['rating']}</td>"
+        f"<td>{html_escape(review['product_name'])}</td>"
+        f"<td>{html_escape(review['issue_type'])}</td>"
+        f"<td>{html_escape(review['severity_level'])}</td>"
+        f"<td><details><summary>{text}</summary></details></td></tr>"
+    )
+
+
+def flagged_table_html(reviews):
+    cols = "".join(f"<col style='width:{width};'>" for width in FLAGGED_COLUMN_WIDTHS.values())
+    head = "".join(f"<th>{name}</th>" for name in FLAGGED_COLUMN_WIDTHS)
+    rows = "".join(flagged_row(review) for review in reviews)
+    return (
+        f"<div class='flag-wrap'><table class='flag-table'><colgroup>{cols}</colgroup>"
+        f"<thead><tr>{head}</tr></thead><tbody>{rows}</tbody></table></div>"
+    )
+
+
 def show_flagged(limit, heading=True, days=365):
     result = api_client.get_flagged(last_n_days=days, limit=limit, full_text=True)
     if "error" in result:
@@ -493,13 +624,7 @@ def show_flagged(limit, heading=True, days=365):
         st.info("No flagged reviews in this window.")
         return
 
-    table = pd.DataFrame(result["reviews"])
-    table = table[["review_id", "submission_time", "rating", "product_name", "issue_type",
-                   "severity_level", "review_text"]].rename(columns={
-        "review_id": "Review", "submission_time": "Date", "rating": "Stars", "product_name": "Product",
-        "issue_type": "Issue", "severity_level": "Severity", "review_text": "What the review says"})
-    render_html_table(table.style, max_height=480)
-
+    st.markdown(flagged_table_html(result["reviews"]), unsafe_allow_html=True)
 
 def render_message(message):
     avatar = ASSISTANT_AVATAR if message["role"] == "assistant" else USER_AVATAR
@@ -524,7 +649,7 @@ def render_history_list(role):
     title_col, collapse_col = st.columns([4, 1])
     title_col.markdown("**Conversations**")
     if collapse_col.button("", key="collapse_history", icon=":material/left_panel_close:",
-                           help="Hide conversations", type="tertiary"):
+                            type="tertiary"):
         st.session_state.history_collapsed = True
         st.rerun()
 
@@ -544,7 +669,7 @@ def render_history_list(role):
             open_conversation(item["session_id"], role)
             st.rerun()
         if delete_col.button("", key=f"del_{item['session_id']}", icon=":material/close:",
-                             help="Delete this conversation", type="tertiary"):
+                              type="tertiary"):
             chat_store.delete_conversation(item["session_id"])
             if active:
                 st.session_state.messages = []
@@ -559,7 +684,7 @@ def render_assistant_header(role):
     if st.session_state.history_collapsed:
         toggle_col, left, clear_col = st.columns([0.6, 4.2, 1.3])
         if toggle_col.button("", key="expand_history", icon=":material/left_panel_open:",
-                             help="Show conversations", type="tertiary"):
+                              type="tertiary"):
             st.session_state.history_collapsed = False
             st.rerun()
     else:
@@ -697,8 +822,8 @@ def audit_summary_table(frame):
     tokens = numeric(frame, "prompt_tokens") + numeric(frame, "completion_tokens")
     return pd.DataFrame({
         "Time": pd.to_datetime(frame["timestamp"], errors="coerce").dt.strftime("%d %b %H:%M"),
+        "Role": frame["role"].map(ROLE_LABELS),
         "Question": frame["question"].map(lambda t: preview(t, 70)),
-        "Answer": frame["answer"].map(preview) if "answer" in frame else "",
         "Status": frame["status"],
         "Seconds": numeric(frame, "latency_sec").round(2).map(lambda v: f"{v:.2f}"),
         "Tokens": tokens.astype(int),
@@ -713,10 +838,20 @@ def show_audit(role):
         return
 
     frame = pd.DataFrame(records)
+    if role == "brand_manager":
+        labels = {label: name for name, label in ROLE_LABELS.items()}
+        picked = st.segmented_control(
+            "Show audit of", ["Both"] + list(labels), default="Both", key="audit_role_filter",) or "Both"
+
+        if picked != "Both":
+            frame = frame[frame["role"] == labels[picked]]
+            if frame.empty:
+                st.info(f"No interactions logged for the {picked.lower()} yet.")
+                return
+
+
     if "answer" not in frame.columns:
-        view = audit_summary_table(frame).drop(columns=["Answer"])
-        view["Cost ($)"] = numeric(frame, "cost_usd").round(5)
-        render_html_table(view.iloc[::-1].style, max_height=380)
+        render_html_table(audit_summary_table(frame).iloc[::-1].style, max_height=380)
         return
 
 
@@ -725,23 +860,72 @@ def show_audit(role):
     cols[0].metric("Requests", len(frame))
     cols[1].metric("Answered", len(answered))
     cols[2].metric("Average seconds", round(numeric(answered, "latency_sec").mean(), 2) if len(answered) else 0)
-    cols[3].metric("Estimated cost ($)", round(numeric(answered, "cost_usd").sum(), 4))
 
-    caption("Latest 30 interactions, newest first. Every request is kept in logs/audit_log.jsonl.")
     render_html_table(audit_summary_table(frame).iloc[::-1].head(30).style, max_height=460)
 
-    with st.expander("Read one interaction in full"):
-        options = list(frame.index)[::-1]
-        chosen = st.selectbox(
-            "Interaction", options,
-            format_func=lambda i: f"{preview(frame.loc[i, 'question'], 70)}",
-        )
-        entry = frame.loc[chosen]
-        st.markdown(f"**Question**\n\n{entry.get('question', '')}")
-        st.markdown(f"**Answer**\n\n{entry.get('answer', '')}")
-        tools = entry.get("tool_calls")
-        if isinstance(tools, list) and tools:
-            st.caption("Tools used: " + ", ".join(t.get("name", "") for t in tools))
+PROFILE_COLUMN_WIDTHS = {
+    "Column": "27%", "Type": "6%", "Source": "6%", "Null count": "6%", "Populated": "7%",
+    "Distinct": "7%", "Minimum": "8%", "Maximum": "8%", "Max length": "7%", "Examples": "18%",
+}
+
+
+def profile_header_html(profile):
+    items = [
+        ("Dataset", html_escape(profile["dataset"])),
+        ("Source", f"<a href='{html_escape(profile['source_url'])}' target='_blank' rel='noopener noreferrer'>"
+                   f"{html_escape(profile['source'])}</a>"),
+        ("File", html_escape(profile["file"])),
+        ("Rows and columns", f"{profile['row_count']:,} rows, {profile['column_count']} columns"),
+        ("Date statistics collected", html_escape(profile["generated_at"])),
+    ]
+    cells = "".join(
+        f"<div class='profile-item'><div class='label'>{label}</div><div class='value'>{value}</div></div>"
+        for label, value in items
+    )
+    return f"<div class='profile-head'>{cells}</div>"
+
+
+def profile_row(column):
+    if column["name"] in PROFILE_SENSITIVE_COLUMNS:
+        examples = "<span class='muted'>hidden for privacy</span>"
+    elif column["examples"]:
+        examples = "".join(f"<div>{html_escape(value)}</div>" for value in column["examples"])
+    else:
+        examples = "-"
+    max_length = "Not a string" if column["kind"] != "text" else (column["max_length"] or "-")
+    return (
+        f"<tr><td><div class='name'>{html_escape(column['name'])}</div>"
+        f"<div class='desc'>{html_escape(column['description'])}</div></td>"
+        f"<td>{column['kind']}</td><td>{column['source']}</td>"
+        f"<td>{column['null_count']:,}</td><td>{column['percent_populated']:g}%</td>"
+        f"<td>{column['distinct_count']:,}</td>"
+        f"<td>{html_escape(column['minimum'] or '-')}</td><td>{html_escape(column['maximum'] or '-')}</td>"
+        f"<td>{max_length}</td><td>{examples}</td></tr>"
+    )
+
+
+def profile_table_html(columns):
+    cols = "".join(f"<col style='width:{width};'>" for width in PROFILE_COLUMN_WIDTHS.values())
+    head = "".join(f"<th>{name}</th>" for name in PROFILE_COLUMN_WIDTHS)
+    rows = "".join(profile_row(column) for column in columns)
+    return (
+        f"<div class='profile-scroll'><table class='profile-table'><colgroup>{cols}</colgroup>"
+        f"<thead><tr>{head}</tr></thead><tbody>{rows}</tbody></table></div>"
+    )
+
+
+
+@st.dialog("Data profile", width="large")
+def show_data_profile():
+    try:
+        profile = api_client.get_data_profile()
+    except requests.RequestException as exc:
+        st.error(f"Could not load the data profile. Is the backend running? ({exc})")
+        return
+
+    st.markdown(profile_header_html(profile), unsafe_allow_html=True)
+    st.markdown(profile_table_html(profile["columns"]), unsafe_allow_html=True)
+
 
 
 def main():
@@ -760,6 +944,7 @@ def main():
     st.session_state.last_model = model
 
     st.title("Review Intelligence")
+
     sections = BRAND_SECTIONS if role == "brand_manager" else SUPPORT_SECTIONS
     section = render_nav(sections)
 

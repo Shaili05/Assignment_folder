@@ -28,6 +28,11 @@ def get_product_options():
 
 
 @st.cache_data(show_spinner=False)
+def get_data_profile():
+    return _get("/dashboard/profile")
+
+
+@st.cache_data(show_spinner=False)
 def get_product_span(product_name):
     try:
         return _get("/dashboard/products/span", params={"product_name": product_name})

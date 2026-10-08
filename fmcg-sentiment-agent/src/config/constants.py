@@ -110,6 +110,7 @@ ISSUE_CONTEXT_CHARS_BEFORE = 150
 SEARCH_RESULT_EXCERPT_CHARS = 600
 
 
+
 NEGATION_WORDS = {
     "no", "not", "never", "without", "nothing", "none", "zero", "non",
     "hardly", "nobody", "neither", "nor", "didnt", "dont", "doesnt", "wont",
@@ -394,4 +395,69 @@ TOOL_LABELS = {
 
 
 EMPTY_ANSWER_MESSAGE = "I could not produce an answer. Please rephrase the question."
+
+
+PROFILE_DATASET = {
+    "name": "Sephora Products and Skincare Reviews",
+    "source": "kaggle",
+    "url": "https://www.kaggle.com/datasets/nadyinky/sephora-products-and-skincare-reviews",
+    "file": "reviews_scrubbed.csv",
+}
+PROFILE_DERIVED_COLUMNS = (
+    "sentiment", "aspects", "is_safety_issue", "severity_score", "issue_type", "severity_level", "matched_terms",
+)
+PROFILE_PROJECT_COLUMNS = ("user_id", "reviewer_name", "user_email", "user_phone")
+PROFILE_SENSITIVE_COLUMNS = ("author_id", "user_id", "reviewer_name", "user_email", "user_phone")
+PROFILE_EXCLUDED_COLUMNS = ("review_id",)
+PROFILE_FREQUENCY_LIMIT = 20
+PROFILE_MAX_DISTINCT_FOR_FREQUENCIES = 300
+
+PROFILE_EXAMPLE_COUNT = 3
+PROFILE_EXAMPLE_CHARS = 60
+PROFILE_COLUMN_DESCRIPTIONS = {
+    "author_id": "Anonymous ID of the person who wrote the review.",
+    "rating": "Stars given by the customer, from 1 (worst) to 5 (best).",
+    "is_recommended": "Whether the customer recommends the product: 1 = yes, 0 = no, -1 = not answered.",
+    "helpfulness": "Share of readers who found the review helpful, from 0 to 1 (helpful votes divided by all votes).",
+    "total_feedback_count": "How many readers voted on whether the review was helpful.",
+    "total_neg_feedback_count": "How many readers voted that the review was not helpful.",
+    "total_pos_feedback_count": "How many readers voted that the review was helpful.",
+    "submission_time": "Date the review was posted.",
+    "review_text": "The review written by the customer. Email, phone and link patterns are scrubbed.",
+    "review_title": "Short headline the customer gave the review. no_title when none was given.",
+    "skin_tone": "Skin tone the customer reported about themselves. not_specified when left blank.",
+    "eye_color": "Eye color the customer reported about themselves. not_specified when left blank.",
+    "skin_type": "Skin type the customer reported about themselves. not_specified when left blank.",
+    "hair_color": "Hair color the customer reported about themselves. not_specified when left blank.",
+    "product_id": "Sephora's ID for the product.",
+    "product_name": "Name of the product the review is about.",
+    "brand_name": "Brand that makes the product.",
+    "price_usd": "Price of the product in US dollars.",
+    "user_id": "Reviewer ID used by this project. The values are hidden here.",
+    "reviewer_name": "Reviewer's name, masked so only the first letter of each word is kept. The values are hidden here.",
+    "user_email": "Reviewer's email, masked so only the first two letters before the @ are kept. The values are hidden here.",
+    "user_phone": "Reviewer's phone number, masked so only the last four digits are kept. The values are hidden here.",
+    "sentiment": "Overall feeling of the review, taken from the rating: 1-2 stars = negative, 3 = neutral, 4-5 = positive.",
+    "aspects": (
+        "Topics the review talks about, found with keyword rules. texture_effectiveness is always included, "
+        "and price, packaging or availability are added when matching words appear."
+    ),
+    "is_safety_issue": "True when the review mentions a safety or quality problem.",
+    "severity_score": (
+        f"How serious the problem is, from 0.0 to 1.0 (0.0 when the review is not flagged). "
+        f"The worst term found sets the start (mild {SEVERITY_BASE_SCORE[1]}, medium {SEVERITY_BASE_SCORE[2]}, "
+        f"serious {SEVERITY_BASE_SCORE[3]}). Each extra term adds {EXTRA_TERM_BONUS} (up to {EXTRA_TERM_BONUS_CAP}). "
+        f"A negative review adds {NEGATIVE_SENTIMENT_BONUS}, and a rating of {LOW_RATING_MAX} or less adds {LOW_RATING_BONUS}."
+    ),
+    "issue_type": (
+        "Kind of problem found. safety = harm to the customer such as a rash or burning, "
+        "quality = problem with the product such as leaking or expired, both = the review has both. "
+        "none when nothing was found."
+    ),
+    "severity_level": (
+        f"Group made from severity_score: high at {HIGH_SEVERITY_SCORE} or more, medium at {MEDIUM_SEVERITY_SCORE} or more, "
+        f"otherwise low. none when the review is not flagged."
+    ),
+    "matched_terms": "The words in the review that triggered the flag. Empty when the review was not flagged.",
+}
 

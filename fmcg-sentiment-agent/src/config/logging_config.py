@@ -1,7 +1,6 @@
 import logging
 import sys
 
-
 def configure_logging(level=logging.INFO, stream=None):
     logging.basicConfig(
         level=level,
